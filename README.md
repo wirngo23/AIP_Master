@@ -4,12 +4,14 @@ A working first release of AIP Discover, AIP Clinical Studio, and AIP Connect. A
 
 ## What works
 
-- Full face, Lips, and Hair editing modes in Discover, Clinical Studio, Connect and the embed. New sessions start with the original photo; a shared Original/Simulated toggle preserves edits. Photo hair color uses local segmentation; 3D hair styles remain illustrative silhouettes. Both sample portals and uploaded portraits use the same editing controls.
+- Full face, Lips, Hair, Beards, and Jawline editing modes in Discover, Clinical Studio, Connect and the embed. New sessions start with the original photo; a shared Original/Simulated toggle preserves edits. Photo hair color uses local segmentation; 3D hair styles remain illustrative silhouettes. Both sample portals and uploaded portraits use the same editing controls.
 
 - Cinematic, responsive dark studio with two original, AI-generated fictional adult sample portraits.
-- Rotatable 360° licensed reference head across Discover, Clinical Studio, and Connect, with drag/zoom, view presets, and labelled export. This is a separate reference person, not a reconstruction of the sample portraits or uploaded user.
+- Rotatable 360° licensed reference head exclusively in Clinical Studio, beside the real portrait, with drag/zoom, view presets, and labelled export. This is a separate reference person, not a reconstruction of the sample portraits or uploaded user.
 - Clinical-only schematic explorer for 25 muscle groups, manual activity/reduction animation, and product/amount demonstration records. Amounts do not drive response predictions. Hair silhouettes are optional and off by default.
-- Twenty optional appearance directions: ten in each of the feminine and masculine collections. Every direction is available to everyone.
+- Twenty-four regional archetypes (six each for lips, hair colors, beard overlays and jawline), synchronized controls and preserved edits. Local, consented turn-video playback and angle scrubbing show original recorded footage, without simulated edits.
+- Cited clinical education separates HA filler volume, botulinum toxin activity reduction, and collagen-stimulating materials.
+- Twenty optional full-face appearance directions: ten in each of the feminine and masculine collections. Every direction is available to everyone.
 - Local JPG/PNG/WebP upload, browser image normalization, manual framing, WebGL image deformation, before/after comparison, conceptual progression, and labelled JPEG export.
 - Local MediaPipe facial landmark analysis aligns photo edits to detected cheeks, jaw, lips and brows, with framing checks and visible original/compare/full-preview modes.
 - Clinical dosage discussion records include exact product, region, laterality, total and notes, with selected US BOTOX Cosmetic/Dysport label references. Records export locally; they are not prescriptions or dose-driven predictions.

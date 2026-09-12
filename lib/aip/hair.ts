@@ -4,6 +4,7 @@ export const HAIR_COLORS = {
   chestnut: [0.29, 0.13, 0.065],
   copper: [0.65, 0.23, 0.085],
   blonde: [0.72, 0.56, 0.29],
+  silver: [0.58, 0.61, 0.64],
 } as const;
 export function maskBytes(
   confidence: Float32Array,

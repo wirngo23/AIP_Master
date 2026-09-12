@@ -52,6 +52,7 @@ import { api, download } from "@/lib/aip/client";
 import ClinicalSpatial from "./clinical-spatial";
 import DosageDetails from "./dosage-details";
 import WorkspaceExplorer from "./workspace-explorer";
+import { appearanceIntent, MODE_LABELS } from "@/lib/aip/regions";
 
 export function Clinical({
   settings,
@@ -74,7 +75,7 @@ export function Clinical({
 }) {
   const [pathway, setPathway] = useState("neuromodulators");
   const [checks, setChecks] = useState<string[]>([]);
-  const active = ARCHETYPES.find((a) => a.id === settings.archetype)!;
+  const active = appearanceIntent(settings);
   return (
     <>
       <section className="workspace-intro">
@@ -138,7 +139,7 @@ export function Clinical({
         <div className="panel clinical-study-summary">
           <div>
             <span className="tiny-label">CURRENT APPEARANCE DIRECTION</span>
-            <h2>{active.name}</h2>
+            <h2>{active?.name??MODE_LABELS[settings.editMode??"full"]+" / custom mix"}</h2>
             <p>
               Photo-study source ·{" "}
               {settings.sample === "upload"

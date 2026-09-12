@@ -173,10 +173,21 @@ export const settingsSchema = z
     sample: z.enum(["woman", "man", "upload"]),
     viewer: z.enum(["photo", "3d"]).optional(),
     hair: z.enum(["default", "crop", "swept", "bob"]).optional(),
-    editMode: z.enum(["full", "lips", "hair"]).optional(),
+    editMode: z.enum(["full", "lips", "hair", "beard", "jawline"]).optional(),
+    regionPresets: z.object({lips:z.string().max(60).optional(),hair:z.string().max(60).optional(),beard:z.string().max(60).optional(),jawline:z.string().max(60).optional()}).strict().optional(),
+    lipUpper: percent.optional(),
+    lipLower: percent.optional(),
+    lipWidth: z.number().finite().min(-100).max(100).optional(),
+    lipCupid: percent.optional(),
+    jawDirection: z.number().finite().min(-1).max(1).optional(),
+    chin: z.number().finite().min(-100).max(100).optional(),
+    beard: z.enum(["original","stubble","boxed","goatee","mustache","chinstrap"]).optional(),
+    beardDensity: percent.optional(),
+    beardColor: z.enum(["espresso","chestnut","copper","silver"]).optional(),
+    hairStrength: percent.optional(),
     previewOriginal: z.boolean().optional(),
     hairColor: z
-      .enum(["original", "espresso", "chestnut", "copper", "blonde"])
+      .enum(["original", "espresso", "chestnut", "copper", "blonde", "silver"])
       .optional(),
     alignment: z.object({
       zoom: z.number().min(1).max(2),
@@ -208,6 +219,8 @@ export function editSettings(s: Settings, patch: Partial<Settings>): Settings {
     "phase",
     "hair",
     "hairColor",
+    "lipUpper", "lipLower", "lipWidth", "lipCupid", "jawDirection", "chin",
+    "beard", "beardDensity", "beardColor", "hairStrength",
   ];
   return {
     ...s,
@@ -238,10 +251,20 @@ export function applyArchetype(s: Settings, id: string): Settings {
     jaw: a.values[1],
     lip: a.values[2],
     brow: a.values[3],
+    jawDirection: undefined,
+    chin: undefined,
+    lipUpper: undefined,
+    lipLower: undefined,
+    lipWidth: undefined,
+    lipCupid: undefined,
+    regionPresets: {...s.regionPresets,lips:undefined,jawline:undefined},
   };
 }
 export function selectSample(s:Settings,sample:"man"|"woman"):Settings {
-  return {...applyArchetype({...s,sample},sample==="man"?"M01":"F01"),alignment:s.sample===sample?s.alignment:{zoom:1,x:0,y:0},previewOriginal:true};
+  return {...baselineSettings(sample),editMode:s.editMode??'full'};
+}
+export function baselineSettings(sample:Settings['sample']='woman'):Settings {
+  return {...DEFAULT_SETTINGS,sample,archetype:sample==='man'?'M01':'F01',cheek:0,jaw:0,lip:0,brow:0,editMode:'full',previewOriginal:true,viewer:'photo',alignment:{zoom:1,x:0,y:0},regionPresets:undefined,lipUpper:undefined,lipLower:undefined,lipWidth:undefined,lipCupid:undefined,jawDirection:undefined,chin:undefined,beard:undefined,beardDensity:undefined,beardColor:undefined,hairColor:undefined,hairStrength:undefined};
 }
 export const DEFAULT_SETTINGS: Settings = {
   archetype: "F01",
@@ -252,7 +275,7 @@ export const DEFAULT_SETTINGS: Settings = {
   brow: 30,
   phase: 50,
   sample: "woman",
-  viewer: "3d",
+  viewer: "photo",
   hair: "default",
   alignment: { zoom: 1, x: 0, y: 0 },
 };

@@ -10,6 +10,7 @@ export type FaceGeometry = {
   height: number;
   lipWidth: number;
   lipHeight: number;
+  chin?: XY;
 };
 function motion(s: Settings) {
   return ARCHETYPES.find((a) => a.id === s.archetype)!.motion;
@@ -22,7 +23,7 @@ export function appearanceAmounts(
 ): [number, number, number, number] {
   return [
     (s.cheek / 100) * motion(s).cheek,
-    (s.jaw / 100) * motion(s).jaw,
+    (s.jaw / 100) * (s.jawDirection ?? motion(s).jaw),
     s.lip / 100,
     (s.brow / 100) * motion(s).brow,
   ];
@@ -72,6 +73,7 @@ export function geometryFromLandmarks(
       x: (points[13].x + points[14].x) / 2,
       y: 1 - (points[13].y + points[14].y) / 2,
     },
+    chin: p(152),
     width,
     height,
     lipWidth: Math.abs(points[291].x - points[61].x),
@@ -106,6 +108,9 @@ export function createWarp(s: Settings, face: FaceGeometry) {
         vertical ? face.height * 0.08 * value * strength : 0,
       );
     }
+  const chin = face.chin ?? {x:face.lips.x,y:face.lips.y-face.height*.22};
+  regions.push(chin.x,chin.y,face.width*.34,face.height*.16);
+  moves.push(0,-face.height*.08*((s.chin??0)/100)*strength);
   return {
     regions,
     moves,
@@ -116,5 +121,7 @@ export function createWarp(s: Settings, face: FaceGeometry) {
       Math.max(face.lipHeight * 1.5, 0.035),
     ],
     lipScale: lip * strength * 0.7,
+    // Monotone inverse scaling: even the strongest allowed setting remains < 1.
+    lipShape: [lip*.7*((s.lipUpper??50)/50),lip*.7*((s.lipLower??50)/50),((s.lipWidth??0)/100),lip*((s.lipCupid??0)/100)].map((v,i)=>i<2?(v*strength)/(1+v*strength):v*strength),
   };
 }

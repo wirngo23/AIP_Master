@@ -8,7 +8,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { type Settings } from "@/lib/aip/domain";
+import { ARCHETYPES, type Settings } from "@/lib/aip/domain";
 export default function EditingModes({
   settings,
   onChange,
@@ -19,6 +19,7 @@ export default function EditingModes({
   faceControls?: boolean;
 }) {
   const mode = settings.editMode ?? "full";
+  const jawDirection=settings.jawDirection??ARCHETYPES.find(a=>a.id===settings.archetype)!.motion.jaw;
   return (
     <div className="editing-modes">
       <Tabs
@@ -29,6 +30,8 @@ export default function EditingModes({
           <TabsTrigger value="full">Full face</TabsTrigger>
           <TabsTrigger value="lips">Lips</TabsTrigger>
           <TabsTrigger value="hair">Hair</TabsTrigger>
+          <TabsTrigger value="beard">Beards</TabsTrigger>
+          <TabsTrigger value="jawline">Jawline</TabsTrigger>
         </TabsList>
       </Tabs>
       <div className="original-mode">
@@ -45,9 +48,10 @@ export default function EditingModes({
           Simulated preview
         </button>
       </div>
+      {(mode==='full'||mode==='lips'||mode==='jawline')&&<div className="focused-controls shared-strength"><label>Exploration intensity <span>{settings.intensity}%</span><Slider value={[settings.intensity]} onValueChange={v=>onChange({intensity:v[0]})} aria-label="Exploration intensity"/></label><details><summary>Illustrative progression</summary><Slider value={[settings.phase]} onValueChange={v=>onChange({phase:v[0]})} aria-label="Regional preview progression"/><p>Baseline → emerging → full expression → softening → return. Both endpoints show baseline; the middle shows the full edit. This is not a clinical time or dose scale.</p></details></div>}
       {mode === "full" && faceControls && (
         <div className="focused-controls">
-          {(["cheek", "jaw", "lip", "brow", "intensity"] as const).map((k) => (
+          {(["cheek", "jaw", "lip", "brow"] as const).map((k) => (
             <label key={k}>
               {
                 {
@@ -82,6 +86,7 @@ export default function EditingModes({
             Refine lip fullness while keeping your other selections. This is an
             appearance edit, not a filler-volume prediction.
           </p>
+          {([['lipUpper','Upper-lip emphasis',0,100,50],['lipLower','Lower-lip emphasis',0,100,50],['lipWidth','Lip width',-100,100,0],['lipCupid','Cupid’s bow',0,100,0]] as const).map(([key,label,min,max,fallback])=><label key={key}>{label} <span>{settings[key]??fallback}%</span><Slider min={min} max={max} value={[settings[key]??fallback]} onValueChange={v=>onChange({[key]:v[0]})} aria-label={label}/></label>)}
         </div>
       )}
       {mode === "hair" && (
@@ -117,7 +122,7 @@ export default function EditingModes({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {["original", "espresso", "chestnut", "copper", "blonde"].map(
+                  {["original", "espresso", "chestnut", "copper", "blonde", "silver"].map(
                     (c) => (
                       <SelectItem key={c} value={c}>
                         {c.charAt(0).toUpperCase() + c.slice(1)}
@@ -131,10 +136,13 @@ export default function EditingModes({
           <p>
             {settings.viewer === "3d"
               ? "Optional silhouettes on the reference scan."
-              : "Color preview follows the detected hair on your photo. Hair length and cut are preserved; use the 3D reference for style silhouettes."}
+              : "Color follows detected hair. Length and cut stay unchanged. Color choices do not represent injectable treatments."}
           </p>
+          <label>Color blend <span>{settings.hairStrength??90}%</span><Slider value={[settings.hairStrength??90]} onValueChange={v=>onChange({hairStrength:v[0]})} aria-label="Hair color blend"/></label>
         </div>
       )}
+      {mode==='beard'&&<div className="focused-controls"><label>Facial hair density <span>{settings.beardDensity??50}%</span><Slider value={[settings.beardDensity??50]} onValueChange={v=>onChange({beardDensity:v[0]})} aria-label="Beard preview density"/></label><label>Facial hair tone<Select value={settings.beardColor??'espresso'} onValueChange={v=>onChange({beardColor:v as Settings['beardColor']})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{['espresso','chestnut','copper','silver'].map(c=><SelectItem value={c} key={c}>{c}</SelectItem>)}</SelectContent></Select></label><p>A textured cosmetic overlay. It adds facial hair; it cannot remove existing hair or predict growth from treatment.</p></div>}
+      {mode==='jawline'&&<div className="focused-controls"><label>Jaw width direction<Select value={jawDirection<0?'narrow':'wide'} onValueChange={v=>onChange({jawDirection:v==='narrow'?-1:1})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="wide">Widen contour</SelectItem><SelectItem value="narrow">Narrow contour</SelectItem></SelectContent></Select></label><label>Jaw contour <span>{settings.jaw}%</span><Slider value={[settings.jaw]} onValueChange={v=>onChange({jaw:v[0]})} aria-label="Focused jaw contour"/></label><label>Chin length <span>{settings.chin??0}%</span><Slider min={-100} max={100} value={[settings.chin??0]} onValueChange={v=>onChange({chin:v[0]})} aria-label="Chin length"/></label><p>Explore lower-face proportions. Narrowing and shortening are appearance edits; filler adds volume and cannot remove bone or tissue.</p></div>}
     </div>
   );
 }

@@ -42,3 +42,10 @@ Browser interaction, visual layout, WebGL rendering across devices, mobile/keybo
 The optional WebMCP tools were implemented with schemas, shared validation, state updates, and lifecycle cleanup. No supporting live WebMCP validation context was available, so registration and execution are **not verified**.
 
 No clinical accuracy, dose-response accuracy, complication reduction, conversion improvement, or competitor superiority has been established. No security/compliance certification is claimed. This record describes a private application foundation, not clinical deployment readiness.
+
+## Regional studio update — 12 September 2026
+
+- 33 automated checks pass, including six presets per focused region, unchanged uploaded identity, actual sample-update merging, preserved unrelated edits, signed jaw movement, bounded inverse lip scaling, original suppression, shader parsing, schema compatibility, and existing domain/clinical record behavior.
+- TypeScript passes. Local root route returns HTTP 200.
+- Independent source review identified and verified fixes for extreme lip texture inversion, inconsistent jaw-direction labels, missing Discover intensity control, upload collection access and inherited regional state after sample switching. No outstanding review findings.
+- No browser interaction, visual realism, video decoding, mobile rendering or clinical accuracy claims are verified by these source-level checks. Local turn-video controls show original footage only. Dose-to-shape simulation and personal 360-degree reconstruction remain absent.

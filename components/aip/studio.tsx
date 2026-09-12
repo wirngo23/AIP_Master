@@ -46,6 +46,7 @@ import {
   editSettings,
   selectSample,
   DEFAULT_SETTINGS,
+  baselineSettings,
   settingsSchema,
   type Settings,
   type Family,
@@ -55,17 +56,14 @@ import {
 import { api, download, normalizePhoto } from "@/lib/aip/client";
 import { Portrait, type PortraitHandle } from "./portrait";
 import { Clinical, Connect } from "./clinic";
-import HeadViewer from "./head-viewer";
+import RegionArchetypes from "./region-archetypes";
+import RealFaceViews from "./real-face-views";
+import {appearanceIntent, MODE_LABELS} from "@/lib/aip/regions";
 import EditingModes from "./editing-modes";
 
 type Modal = "upload" | "save" | "library" | "consultation" | "privacy" | null;
 export default function Studio({ embedded = false }: { embedded?: boolean }) {
-  const [settings, setSettings] = useState<Settings>({
-    ...DEFAULT_SETTINGS,
-    viewer: "photo",
-    editMode: "full",
-    previewOriginal: true,
-  });
+  const [settings, setSettings] = useState<Settings>(baselineSettings());
   const current = useRef(settings);
   current.current = settings;
   const [family, setFamily] = useState<Family>("feminine");
@@ -101,6 +99,8 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
   const stage = useRef<HTMLDivElement>(null);
   const restoreAlignment = useRef<Settings["alignment"] | null>(null);
   const selected = ARCHETYPES.find((a) => a.id === settings.archetype)!;
+  const currentIntent=appearanceIntent(settings);
+  const intentName=currentIntent?.name??MODE_LABELS[settings.editMode??"full"]+" / custom mix";
   const src =
     settings.sample === "upload" && photo
       ? photo
@@ -252,6 +252,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
   }, []);
   const switchView = (v: string) => {
     setView(v);
+    setSettings(s=>({...s,viewer:"photo"}));
     if (!embedded)
       window.history.replaceState(
         null,
@@ -512,63 +513,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
           </section>
           <div className="studio-grid">
             <aside className="direction-panel panel">
-              <div className="panel-heading">
-                <span className="section-index">01</span>
-                <h2>Choose your archetype</h2>
-                <Sparkles size={16} />
-              </div>
-              <p className="muted">Refine the look on your terms.</p>
-              <Tabs
-                value={family}
-                onValueChange={(v) => choose(v === "masculine" ? "M01" : "F01")}
-              >
-                <TabsList className="family-tabs">
-                  <TabsTrigger value="feminine">
-                    Feminine collection
-                  </TabsTrigger>
-                  <TabsTrigger value="masculine">Masculine</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <div className="archetype-grid">
-                {ARCHETYPES.filter((a) => a.family === family).map((a, i) => (
-                  <button
-                    onClick={() => choose(a.id)}
-                    aria-pressed={a.id === settings.archetype}
-                    key={a.id}
-                    className={`archetype ${a.id === settings.archetype ? "selected" : ""}`}
-                  >
-                    <span className="shape-icon" aria-hidden="true">
-                      {["◌", "◇", "⌒", "∿", "✧"][i % 5]}
-                    </span>
-                    <span>{a.name}</span>
-                    {a.id === settings.archetype && (
-                      <Check className="selection-check" size={12} />
-                    )}
-                  </button>
-                ))}
-              </div>
-              <div className="direction-note">
-                <span className="tiny-label">YOUR ARCHETYPE</span>
-                <h3>{selected.name}</h3>
-                <p>{selected.description}</p>
-              </div>
-              <div className="range-label">
-                <label>Exploration intensity</label>
-                <span>{settings.intensity}%</span>
-              </div>
-              <Slider
-                value={[settings.intensity]}
-                onValueChange={(v) => update({ intensity: v[0] })}
-                aria-label="Exploration intensity"
-              />
-              <div className="range-endpoints">
-                <span>Subtle</span>
-                <span>Expressive</span>
-              </div>
-              <p className="micro-copy">
-                All 20 preferences are open to everyone. Labels do not describe
-                your personality or worth.
-              </p>
+              <RegionArchetypes settings={settings} onChange={update}/>
             </aside>
             <section
               className={`visual-panel ${expanded ? "expanded-portrait" : ""}`}
@@ -578,35 +523,17 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                   <span className="live-dot" /> APPEARANCE EXPLORATION
                 </span>
                 <span className="sample-label">
-                  {settings.viewer === "3d"
-                    ? "3D REFERENCE"
-                    : settings.sample === "upload"
+                  {settings.sample === "upload"
                       ? "YOUR PORTRAIT"
                       : "FICTIONAL SAMPLE"}
                 </span>
               </div>
-              <Tabs
-                value={settings.viewer ?? "photo"}
-                onValueChange={(v) => update({ viewer: v as "photo" | "3d" })}
-              >
-                <TabsList className="viewer-mode">
-                  <TabsTrigger value="3d">360° reference head</TabsTrigger>
-                  <TabsTrigger value="photo">Photo study</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <EditingModes settings={settings} onChange={update} />
+              <EditingModes settings={{...settings,viewer:"photo"}} onChange={update} />
               <div
-                className={`portrait-stage ${settings.viewer === "3d" ? "spatial-stage" : ""}`}
+                className="portrait-stage"
                 ref={stage}
               >
-                {settings.viewer === "3d" ? (
-                  <HeadViewer
-                    managed
-                    settings={settings}
-                    hair={settings.hair ?? "default"}
-                    onHairChange={(hair) => update({ hair })}
-                  />
-                ) : settings.sample === "upload" && !photo ? (
+                {settings.sample === "upload" && !photo ? (
                   <div className="missing-portrait">
                     <ImagePlus size={40} />
                     <h3>Your original portrait is needed.</h3>
@@ -632,7 +559,8 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                   />
                 )}
               </div>
-              {settings.viewer !== "3d" && (
+              <RealFaceViews source={src}/>
+              {(
                 <div className="comparison-control">
                   <div className="preview-modes">
                     <button
@@ -689,7 +617,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                 <div>
                   <button
                     className={`icon-button ${overlay ? "active" : ""}`}
-                    hidden={settings.viewer === "3d"}
+
                     aria-label="Toggle illustrative facial overlay"
                     aria-pressed={overlay}
                     onClick={() => setOverlay((v) => !v)}
@@ -709,7 +637,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                   <button
                     className="icon-button"
                     aria-label="Download illustrative comparison"
-                    hidden={settings.viewer === "3d"}
+
                     disabled={
                       !ready || (settings.sample === "upload" && !photo)
                     }
@@ -729,10 +657,10 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                 </div>
                 <p className="muted">Small shifts. Considered possibilities.</p>
                 <div className="change-receipt" aria-live="polite">
-                  <strong>{selected.name} · preset intent</strong>
-                  <p>{selected.description}</p>
+                  <strong>{intentName} · appearance intent</strong>
+                  <p>{currentIntent?.description??"Your own regional adjustments. Existing edits in other regions are preserved."}</p>
                   <small>
-                    {settings.intensity === 0 ||
+                    {settings.editMode==="hair"||settings.editMode==="beard"?"Cosmetic color and texture preview; not an injectable effect.":settings.intensity === 0 ||
                     settings.phase === 0 ||
                     settings.phase === 100
                       ? "Original geometry: intensity or progression is at zero effect. Increase intensity and choose the middle progression to see edits."
@@ -835,16 +763,8 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
               <button
                 className="text-link"
                 onClick={() => {
-                  setSettings((s) => ({
-                    ...applyArchetype(
-                      { ...DEFAULT_SETTINGS, sample: s.sample },
-                      family === "masculine" ? "M01" : "F01",
-                    ),
-                    sample: s.sample,
-                    viewer: s.viewer ?? "photo",
-                    alignment: s.alignment,
-                  }));
-                  setSplit(50);
+                  setSettings(s=>({...baselineSettings(s.sample),alignment:s.alignment}));
+                  setSplit(100);
                   setActiveStudy(null);
                 }}
               >
@@ -1077,7 +997,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
               <div className="save-summary">
                 <Sparkles size={18} />
                 <div>
-                  <strong>{selected.name}</strong>
+                  <strong>{intentName}</strong>
                   <p>
                     {settings.intensity}% exploration intensity · illustrative
                     {settings.viewer === "3d"
@@ -1332,7 +1252,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                 onClick={() => {
                   setPhoto(null);
                   setOriginalBlob(null);
-                  setSettings({ ...DEFAULT_SETTINGS });
+                  setSettings(baselineSettings());
                   setActiveStudy(null);
                   setFamily("feminine");
                   setModal(null);

@@ -30,11 +30,12 @@ export default function Development() {
             phase: "01 / AVAILABLE IN THIS BUILD",
             title: "Experience foundation",
             items: [
-              "20 preference directions across two optional style collections.",
+              "20 full-face preferences plus 24 focused lip, hair-color, beard and jawline archetypes.",
+              "Five synchronized editing modes; local turn-video playback shows original recorded angles.",
               "Browser photo preparation, framing, comparison, and conceptual progression.",
               "On-device facial landmark alignment and visible original / compare / preview modes.",
               "Clinical dosage discussion records with selected product-specific US label references.",
-              "360° reference scan, optional hair silhouettes, and a Clinical Studio schematic muscle explorer.",
+              "Clinical-only reference scan beside the real portrait, muscle illustrations and tissue-mechanism education.",
               "Account-scoped study storage, optional private photo storage, and deletion.",
               "Private consultation drafts, review notes, and clinic embed configuration.",
             ],
@@ -91,7 +92,7 @@ export default function Development() {
           The reference head is a licensed scan of a separate person. Uploaded
           photographs stay two-dimensional; personal 3D reconstruction requires
           additional capture or a validated reconstruction service. Hair options
-          are illustrative silhouettes.
+          are illustrative silhouettes. Local turn videos show recorded original angles, not simulated outcomes.
         </p>
         <p>
           Clinical Studio shows 25 schematic muscle groups, including paired

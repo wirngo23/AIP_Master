@@ -2668,6 +2668,7 @@ html[data-accent="rose"] .primary-button {
 }
 .editing-mode-tabs {
   display: flex;
+  flex-wrap: wrap;
   width: 100%;
   background: #0f1d1a;
   border: 1px solid #304c40;
@@ -2678,7 +2679,8 @@ html[data-accent="rose"] .primary-button {
 .editing-mode-tabs > button {
   flex: 1;
   padding: 12px 10px;
-  font-size: 14px;
+  font-size: 13px;
+  min-width: 65px;
 }
 .original-mode {
   display: flex;
@@ -2864,3 +2866,20 @@ html[data-accent="rose"] .primary-button {
     padding: 20px;
   }
 }
+
+/* Regional studio: coordinated selectors, real footage and clinical anatomy */
+.region-context{color:#c4ebd6;font-size:14px;margin:18px 0}.region-context span{color:#91aa9e;font-size:12px}
+.region-archetypes .portal-switch{padding:0 0 18px}.region-archetypes .direction-note{padding-block:22px}.region-archetypes .direction-note h3{font-size:27px}
+.compact-archetypes{padding:24px}.compact-archetypes .archetype-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.compact-archetypes .archetype{padding:12px;font-size:12px;min-height:70px}
+.real-face-views{margin:16px;border:1px solid #345346;border-radius:12px;background:linear-gradient(140deg,#172e26,#0e1919);overflow:hidden}
+.real-face-views summary{cursor:pointer;display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:18px;color:#d6f6e4;font-size:14px}.real-face-views summary span{margin-left:auto;font-size:8px;letter-spacing:1px;color:#9bbdab}
+.turn-content{padding:0 20px 20px}.turn-content p{font-size:13px;line-height:1.65;color:#b7cfc1}.turn-content .turn-evidence{border-left:2px solid #c8b87f;padding-left:12px;color:#ded7bb}
+.turn-empty{border:1px dashed #436455;border-radius:10px;text-align:center;padding:24px}.turn-empty svg{margin:auto}.turn-empty h3{font-size:20px;margin:12px 0 0}
+.turn-video{width:100%;max-height:520px;background:#07110e;object-fit:contain;border-radius:10px}.turn-scrub{display:flex;align-items:center;gap:12px;margin:12px 0}.turn-scrub span{font-size:12px;color:#a9c7b5}.turn-content .consent-row{margin-top:20px}
+.clinical-spatial{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}.clinical-person-panel{overflow:hidden;min-width:0}.person-panel-heading{padding:22px 18px 4px}.person-panel-heading h2{font-size:19px}
+.anatomy-panel{min-width:0}.anatomy-panel .head-canvas{height:480px}.anatomy-panel .head-loading{min-height:480px}.anatomy-panel .head-viewer{margin-inline:-10px}
+.treatment-explainer{border-top:1px solid #345043;border-bottom:1px solid #345043;margin-block:22px;padding-block:22px}.treatment-explainer h3{font-size:25px;margin:10px 0 16px}.treatment-explainer h4{font-size:16px;margin:18px 0 8px}.treatment-explainer p{font-size:13px;line-height:1.7;color:#afc9b9}.treatment-explainer a{font-size:12px;color:#a8e3c6;text-decoration:underline}
+.mechanism-tabs{display:flex;gap:6px;flex-wrap:wrap}.mechanism-tabs button{padding:9px 10px;border:1px solid #3a5348;border-radius:8px;font-size:12px;color:#bdd5c7}.mechanism-tabs button[aria-pressed=true]{background:#315e48;color:#edfff4}
+.tissue-diagram{background:#0d2019;border-radius:10px;margin-top:14px;padding:12px}.tissue-diagram svg{width:100%;height:auto}.tissue-diagram path{transition:d .5s}.tissue-diagram button{font-size:12px;min-height:34px}.evidence-disclosure{margin-top:18px}.evidence-disclosure summary{cursor:pointer;font-size:13px;color:#d4dec1}
+@media(max-width:1050px){.clinical-spatial{grid-template-columns:minmax(0,1fr)}.clinical-person-panel{grid-row:1}.compact-archetypes .archetype-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:550px){.editing-mode-tabs>button{flex:1 0 28%;font-size:12px}.turn-content{padding-inline:12px}.compact-archetypes{padding:18px}.real-face-views summary span{margin-left:0;width:100%}.anatomy-panel .head-canvas{height:370px}}

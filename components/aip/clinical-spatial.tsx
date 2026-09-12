@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Activity, Layers3, Pause, Play, ShieldCheck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -13,6 +13,8 @@ import {
 import { MUSCLES } from "@/lib/aip/spatial";
 import { type Settings } from "@/lib/aip/domain";
 import WorkspaceExplorer from "./workspace-explorer";
+import HeadViewer from "./head-viewer";
+import TreatmentExplainer from "./treatment-explainer";
 export default function ClinicalSpatial({
   settings,
   src,
@@ -28,24 +30,10 @@ export default function ClinicalSpatial({
   const [activity, setActivity] = useState(60);
   const [reduction, setReduction] = useState(0);
   const [playing, setPlaying] = useState(false);
+  useEffect(()=>{setSelected(settings.editMode==="lips"?"orbicularis-oris":settings.editMode==="jawline"||settings.editMode==="beard"?"masseter":"frontalis");setReduction(0);setPlaying(false);},[settings.editMode]);
   const muscle = MUSCLES.find((m) => m.id === selected)!;
   return (
     <section className="clinical-spatial">
-      <div className="panel clinical-3d-panel">
-        <WorkspaceExplorer
-          settings={settings}
-          src={src}
-          onChange={patch=>{if(patch.viewer==="photo"||patch.sample){setVisible(false);setPlaying(false);}onChange(patch);}}
-          clinical={{
-            visible,
-            selected,
-            showAll,
-            activity,
-            reduction,
-            playing,
-          }}
-        />
-      </div>
       <aside className="panel anatomy-panel">
         <div className="panel-heading">
           <Layers3 size={17} />
@@ -65,11 +53,14 @@ export default function ClinicalSpatial({
             checked={visible}
             onCheckedChange={(v) => {
               setVisible(v);
-              if (v) onChange({ viewer: "3d" });
+
               if (!v) setPlaying(false);
             }}
           />
         </label>
+        <HeadViewer managed settings={settings} hair={settings.hair??"default"} clinical={{visible,selected,showAll,activity,reduction,playing}}/>
+        {settings.editMode==="hair"&&<label className="form-field">Reference-only hairstyle<Select value={settings.hair??"default"} onValueChange={v=>onChange({hair:v as Settings["hair"]})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="default">Original reference</SelectItem><SelectItem value="crop">Short crop silhouette</SelectItem><SelectItem value="swept">Swept silhouette</SelectItem><SelectItem value="bob">Bob silhouette</SelectItem></SelectContent></Select></label>}
+        <TreatmentExplainer mode={settings.editMode}/>
         {visible && (
           <div className="anatomy-content">
             <div className="workspace-notice">
@@ -155,6 +146,7 @@ export default function ClinicalSpatial({
           </div>
         )}
       </aside>
+      <div className="panel clinical-person-panel"><WorkspaceExplorer settings={settings} src={src} onChange={onChange}/></div>
     </section>
   );
 }
