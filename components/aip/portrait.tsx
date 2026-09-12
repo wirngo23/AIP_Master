@@ -6,18 +6,18 @@ import {
   useRef,
   useState,
 } from "react";
-import { progression, type Settings } from "@/lib/aip/domain";
+import { type Settings } from "@/lib/aip/domain";
+import { createWarp, type FaceGeometry } from "@/lib/aip/appearance";
+import { analyzeFace } from "@/lib/aip/face-analysis";
 export type PortraitHandle = { exportImage: () => Promise<Blob | null> };
 const vertex = `attribute vec2 p; varying vec2 uv; void main(){uv=(p+1.)*.5;gl_Position=vec4(p,0,1);}`;
 const fragment = `precision highp float;
-varying vec2 uv; uniform sampler2D photo; uniform vec4 amounts; uniform float strength; uniform float split; uniform vec2 crop; uniform vec3 alignment;
+varying vec2 uv; uniform sampler2D photo; uniform vec4 regions[6]; uniform vec2 moves[6]; uniform vec4 lips; uniform float lipScale; uniform float split; uniform vec2 crop; uniform vec3 alignment;
 float g(vec2 p,vec2 c,vec2 s){vec2 d=(p-c)/s;return exp(-dot(d,d)*2.);}
-void main(){vec2 q=uv; if(uv.x>=split){float side=uv.x<.5?-1.:1.;
-q.x-=side*.025*amounts.x*g(uv,vec2(.5+side*.17,.49),vec2(.12,.12))*strength;
-q.x-=side*.022*amounts.y*g(uv,vec2(.5+side*.16,.34),vec2(.13,.14))*strength;
-q.y-=(uv.y-.411)*.28*amounts.z*g(uv,vec2(.5,.411),vec2(.115,.064))*strength;
-q.y-=.014*amounts.w*(g(uv,vec2(.38,.66),vec2(.11,.06))+g(uv,vec2(.62,.66),vec2(.11,.06)))*strength;
-}q=(q-.5)/alignment.x+.5-vec2(alignment.y,alignment.z);q=(q-.5)*crop+.5;gl_FragColor=texture2D(photo,clamp(q,vec2(.001),vec2(.999)));}`;
+void main(){vec2 source=(uv-.5)/alignment.x+.5-vec2(alignment.y,alignment.z);source=(source-.5)*crop+.5;vec2 q=source;
+if(uv.x>=split){for(int i=0;i<6;i++){q-=moves[i]*g(source,regions[i].xy,regions[i].zw);}
+vec2 d=source-lips.xy;q-=d*vec2(.16,1.)*lipScale*g(source,lips.xy,lips.zw);
+}gl_FragColor=texture2D(photo,clamp(q,vec2(.001),vec2(.999)));}`;
 export const Portrait = forwardRef<
   PortraitHandle,
   {
@@ -33,10 +33,13 @@ export const Portrait = forwardRef<
     gl: WebGLRenderingContext;
     p: WebGLProgram;
     crop: number[];
+    face: FaceGeometry;
   } | null>(null);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [generation, setGeneration] = useState(0);
+  const [face, setFace] = useState<FaceGeometry | null>(null);
+  const [crop, setCrop] = useState([1, 1]);
   useImperativeHandle(
     ref,
     () => ({
@@ -70,6 +73,7 @@ export const Portrait = forwardRef<
   useEffect(() => {
     let alive = true;
     setLoaded(false);
+    setFace(null);
     setError("");
     onStatus?.(false);
     const c = canvas.current;
@@ -88,8 +92,10 @@ export const Portrait = forwardRef<
       const s = gl.createShader(type)!;
       gl.shaderSource(s, source);
       gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        gl.deleteShader(s);
         throw new Error("Preview shader unavailable");
+      }
       return s;
     };
     let p: WebGLProgram | null = null;
@@ -128,26 +134,44 @@ export const Portrait = forwardRef<
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
       const img = new Image();
-      img.onload = () => {
+      img.onload = async () => {
         if (!alive || !p) return;
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(
-          gl.TEXTURE_2D,
-          0,
-          gl.RGBA,
-          gl.RGBA,
-          gl.UNSIGNED_BYTE,
-          img,
-        );
-        const ratio = img.width / img.height;
-        renderer.current = {
-          gl,
-          p,
-          crop: ratio > 0.75 ? [0.75 / ratio, 1] : [1, ratio / 0.75],
-        };
-        setLoaded(true);
-        setGeneration((n) => n + 1);
-        onStatus?.(true);
+        try {
+          const detected = await analyzeFace(img);
+          if (!alive || !p) return;
+          gl.bindTexture(gl.TEXTURE_2D, texture);
+          gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            img,
+          );
+          const ratio = img.width / img.height;
+          const imageCrop =
+            ratio > 0.75 ? [0.75 / ratio, 1] : [1, ratio / 0.75];
+          renderer.current = {
+            gl,
+            p,
+            crop: imageCrop,
+            face: detected,
+          };
+          setFace(detected);
+          setCrop(imageCrop);
+          setLoaded(true);
+          setGeneration((n) => n + 1);
+          onStatus?.(true);
+        } catch (e) {
+          if (alive) {
+            setError(
+              e instanceof Error
+                ? e.message
+                : "Face analysis unavailable. Try again with a front-facing photo.",
+            );
+            onStatus?.(false);
+          }
+        }
       };
       img.onerror = () => {
         if (alive)
@@ -178,20 +202,14 @@ export const Portrait = forwardRef<
   useEffect(() => {
     const r = renderer.current;
     if (!r || !loaded) return;
-    const { gl, p, crop } = r;
+    const { gl, p, crop, face } = r;
     gl.useProgram(p);
     gl.viewport(0, 0, 750, 1000);
-    gl.uniform4f(
-      gl.getUniformLocation(p, "amounts"),
-      settings.cheek / 100,
-      settings.jaw / 100,
-      settings.lip / 100,
-      settings.brow / 100,
-    );
-    gl.uniform1f(
-      gl.getUniformLocation(p, "strength"),
-      (settings.intensity / 100) * progression(settings.phase),
-    );
+    const warp = createWarp(settings, face);
+    gl.uniform4fv(gl.getUniformLocation(p, "regions[0]"), warp.regions);
+    gl.uniform2fv(gl.getUniformLocation(p, "moves[0]"), warp.moves);
+    gl.uniform4fv(gl.getUniformLocation(p, "lips"), warp.lip);
+    gl.uniform1f(gl.getUniformLocation(p, "lipScale"), warp.lipScale);
     gl.uniform1f(gl.getUniformLocation(p, "split"), split / 100);
     gl.uniform2f(gl.getUniformLocation(p, "crop"), crop[0], crop[1]);
     gl.uniform3f(
@@ -219,22 +237,27 @@ export const Portrait = forwardRef<
       />
       <div className="portrait-vignette" />
       <div className="scan-corners" />
-      {overlay && (
+      {overlay && face && (
         <svg className="face-map" viewBox="0 0 300 400" aria-hidden="true">
-          <path d="M92 143 Q150 117 208 143 M87 201 Q150 228 213 201 M100 244 Q150 277 200 244 M150 130V280 M96 159L84 205L105 243L150 279L195 243L216 205L204 159" />
-          {[
-            [96, 159],
-            [204, 159],
-            [84, 205],
-            [216, 205],
-            [150, 210],
-            [105, 243],
-            [195, 243],
-            [150, 279],
-          ].map(([cx, cy], i) => (
-            <circle key={i} cx={cx} cy={cy} r="2" />
-          ))}
+          {[...face.cheeks, ...face.jaw, ...face.brows, face.lips].map(
+            (point, i) => {
+              const x =
+                ((point.x - 0.5) / crop[0] + settings.alignment.x) *
+                  settings.alignment.zoom +
+                0.5;
+              const y =
+                ((point.y - 0.5) / crop[1] + settings.alignment.y) *
+                  settings.alignment.zoom +
+                0.5;
+              return <circle key={i} cx={x * 300} cy={(1 - y) * 400} r="2" />;
+            },
+          )}
         </svg>
+      )}
+      {!loaded && !error && (
+        <div className="analysis-status" role="status">
+          Analyzing facial features on this device…
+        </div>
       )}
       {error && (
         <div className="render-error" role="alert">
@@ -244,15 +267,19 @@ export const Portrait = forwardRef<
       <div className="stage-coordinates">
         AIP / VISION LAB
         <br />
-        ILLUSTRATIVE STUDY
+        {face ? "LANDMARK-ALIGNED PREVIEW" : "ORIGINAL PHOTO"}
       </div>
-      <div className="portrait-caption">
-        <span>ORIGINAL</span>
-        <span>APPEARANCE PREVIEW</span>
-      </div>
-      <div className="comparison-line" style={{ left: `${split}%` }}>
-        <span>‹ ›</span>
-      </div>
+      {loaded && (
+        <div className="portrait-caption">
+          <span>{split>0?"ORIGINAL":""}</span>
+          <span>{split<100?"APPEARANCE PREVIEW":""}</span>
+        </div>
+      )}
+      {loaded && split > 0 && split < 100 && (
+        <div className="comparison-line" style={{ left: `${split}%` }}>
+          <span>‹ ›</span>
+        </div>
+      )}
     </>
   );
 });

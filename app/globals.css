@@ -2649,3 +2649,126 @@ html[data-accent="rose"] .primary-button {
   background: #142a26;
   border-radius: 8px;
 }
+.analysis-status {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 60px;
+  padding: 14px;
+  background: #102a24ee;
+  border: 1px solid #48836f;
+  border-radius: 10px;
+  color: #d8eee5;
+  z-index: 6;
+  text-align: center;
+}
+.preview-modes {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.preview-modes button {
+  flex: 1;
+  padding: 9px;
+  border-radius: 8px;
+  border: 1px solid #304943;
+  background: transparent;
+  color: #afc2bb;
+}
+.preview-modes button.active {
+  background: #294c3f;
+  color: #ecfff5;
+}
+.change-receipt {
+  padding: 14px;
+  border-left: 2px solid #79bba1;
+  background: #172c26;
+  margin: 16px 0;
+  border-radius: 0 8px 8px 0;
+  font-size: 14px;
+}
+.change-receipt p {
+  margin: 8px 0;
+  line-height: 1.6;
+  color: #b9d0c4;
+}
+.change-receipt small {
+  display: block;
+  color: #adc4bb;
+  line-height: 1.6;
+}
+.dosage-panel {
+  padding: 26px;
+  margin: 22px 0;
+}
+.dosage-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 24px;
+}
+.dose-reference {
+  margin-top: 20px;
+  border: 1px solid #3a5145;
+  padding: 20px;
+  border-radius: 12px;
+  background: #15271f;
+}
+.dose-reference p {
+  margin: 12px 0;
+  color: #bfd1c6;
+  line-height: 1.6;
+}
+.dose-reference small {
+  display: block;
+  line-height: 1.6;
+  color: #a5b9ab;
+  margin-top: 12px;
+}
+.dose-total {
+  display: block;
+  font-size: 36px;
+  color: #d7f2db;
+  margin-top: 12px;
+}
+.dose-total small {
+  font-size: 14px;
+  font-weight: 400;
+  margin-top: 0;
+}
+.dose-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0;
+}
+.dose-inputs input {
+  width: 100%;
+  min-width: 0;
+}
+.record-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 18px 0;
+  border-block: 1px solid #344c40;
+  margin: 12px 0;
+}
+.record-total strong {
+  color: #c2e2c8;
+  font-size: 22px;
+}
+.dosage-panel .form-field {
+  margin-bottom: 14px;
+}
+@media (max-width: 800px) {
+  .dosage-grid {
+    grid-template-columns: 1fr;
+  }
+  .dose-inputs {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .dosage-panel {
+    padding: 20px;
+  }
+}

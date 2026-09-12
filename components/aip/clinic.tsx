@@ -50,6 +50,7 @@ import {
 } from "@/lib/aip/domain";
 import { api, download } from "@/lib/aip/client";
 import ClinicalSpatial from "./clinical-spatial";
+import DosageDetails from "./dosage-details";
 import HeadViewer from "./head-viewer";
 
 export function Clinical({
@@ -97,6 +98,7 @@ export function Clinical({
         </span>
       </div>
       <ClinicalSpatial settings={settings} />
+      <DosageDetails />
       <div className="clinical-grid">
         <aside className="panel clinical-checklist">
           <p className="eyebrow">CONSULTATION PREPARATION</p>

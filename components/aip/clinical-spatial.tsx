@@ -1,13 +1,6 @@
 "use client";
 import { useState } from "react";
-import {
-  Activity,
-  Download,
-  Layers3,
-  Pause,
-  Play,
-  ShieldCheck,
-} from "lucide-react";
+import { Activity, Layers3, Pause, Play, ShieldCheck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -17,10 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MUSCLES, scenarioSchema } from "@/lib/aip/spatial";
+import { MUSCLES } from "@/lib/aip/spatial";
 import { type Settings } from "@/lib/aip/domain";
-import { download } from "@/lib/aip/client";
 import HeadViewer from "./head-viewer";
 export default function ClinicalSpatial({ settings }: { settings: Settings }) {
   const [visible, setVisible] = useState(false);
@@ -29,49 +20,7 @@ export default function ClinicalSpatial({ settings }: { settings: Settings }) {
   const [activity, setActivity] = useState(60);
   const [reduction, setReduction] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [kind, setKind] = useState<"toxin" | "filler">("toxin");
-  const [product, setProduct] = useState("");
-  const [amount, setAmount] = useState("");
-  const [error, setError] = useState("");
   const muscle = MUSCLES.find((m) => m.id === selected)!;
-  function exportScenario() {
-    const parsed = scenarioSchema.safeParse({
-      kind,
-      product,
-      amount: amount === "" ? NaN : Number(amount),
-      muscle: selected,
-      activity,
-      reduction: kind === "toxin" ? reduction : 0,
-    });
-    if (!parsed.success) {
-      setError(
-        "Enter a product name and a non-negative numeric amount. No dose is suggested.",
-      );
-      return;
-    }
-    setError("");
-    download(
-      new Blob(
-        [
-          JSON.stringify(
-            {
-              ...parsed.data,
-              amountUnit: kind === "toxin" ? "product-specific Units" : "mL",
-              evidence:
-                "Illustrative manual activity setting, not a predicted treatment response",
-              doseResponseModel: null,
-              patientSpecific: false,
-              source: "AIP reference-head demonstration",
-            },
-            null,
-            2,
-          ),
-        ],
-        { type: "application/json" },
-      ),
-      "aip-clinical-demonstration.json",
-    );
-  }
   return (
     <section className="clinical-spatial">
       <div className="panel clinical-3d-panel">
@@ -82,7 +31,7 @@ export default function ClinicalSpatial({ settings }: { settings: Settings }) {
             selected,
             showAll,
             activity,
-            reduction: kind === "toxin" ? reduction : 0,
+            reduction,
             playing,
           }}
         />
@@ -162,81 +111,23 @@ export default function ClinicalSpatial({ settings }: { settings: Settings }) {
                 ? "Pause muscle demonstration"
                 : "Animate selected muscle"}
             </button>
-            <details className="scenario-disclosure">
-              <summary>Injection & response demonstration</summary>
+            <div className="scenario-disclosure">
+              <h3>Illustrative neuromodulation</h3>
+              <div className="range-label">
+                <label>Hypothetical activity reduction</label>
+                <span>{reduction}%</span>
+              </div>
+              <Slider
+                value={[reduction]}
+                onValueChange={(v) => setReduction(v[0])}
+                aria-label="Manually chosen hypothetical activity reduction"
+              />
               <p className="micro-copy">
-                Amounts are entered by the user for a demonstration record. They
-                do not drive the animation or imply a recommended dose.
+                This manually chosen reduction affects the highlighted muscle
+                illustration. It is independent of the dosage record below.
+                Fillers are not modeled as muscle paralysis.
               </p>
-              <Tabs
-                value={kind}
-                onValueChange={(v) => {
-                  setKind(v as "toxin" | "filler");
-                  setProduct("");
-                  setAmount("");
-                  setReduction(0);
-                }}
-              >
-                <TabsList className="family-tabs">
-                  <TabsTrigger value="toxin">Neuromodulator</TabsTrigger>
-                  <TabsTrigger value="filler">Filler</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <label className="form-field">
-                Product name
-                <input
-                  value={product}
-                  maxLength={80}
-                  onChange={(e) => setProduct(e.target.value)}
-                  placeholder="Enter the exact product"
-                />
-              </label>
-              <label className="form-field">
-                Recorded amount ·{" "}
-                {kind === "toxin" ? "product-specific Units" : "mL"}
-                <input
-                  inputMode="decimal"
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="No dose suggested"
-                />
-              </label>
-              {kind === "toxin" ? (
-                <>
-                  <div className="range-label">
-                    <label>Hypothetical activity reduction</label>
-                    <span>{reduction}%</span>
-                  </div>
-                  <Slider
-                    value={[reduction]}
-                    onValueChange={(v) => setReduction(v[0])}
-                    aria-label="Manually chosen hypothetical activity reduction"
-                  />
-                  <p className="micro-copy">
-                    Manually chosen for illustration. An entered dose does not
-                    predict this percentage. Units are product-specific and are
-                    not interchangeable.
-                  </p>
-                </>
-              ) : (
-                <p className="micro-copy">
-                  Filler volume is not modeled as reduced muscle activity.
-                  Tissue-volume response is not implemented in this
-                  demonstration.
-                </p>
-              )}
-              <button className="secondary-button" onClick={exportScenario}>
-                <Download size={15} /> Export demonstration record
-              </button>
-              {error && (
-                <p className="form-error" role="alert">
-                  {error}
-                </p>
-              )}
-            </details>
+            </div>
             <a className="text-link" href="/development#anatomy-evidence">
               Evidence & model boundaries <Activity size={13} />
             </a>

@@ -1,5 +1,11 @@
 # Validation record — foundation release
 
+## Landmark and dosage update — September 12, 2026
+
+- All 18 tests and TypeScript checks passed, including shader syntax, detected-coordinate warp geometry and strict dosage record validation.
+- Native inference using the bundled MediaPipe model detected both fictional sample faces and produced geometry accepted by the application.
+- See [landmark and dosage release](LANDMARK_AND_DOSAGE_RELEASE.md) for the measured preset displacement, honest model boundaries and source references. Browser interaction/GPU appearance remain unverified.
+
 ## 360° update — September 12, 2026
 
 - All 11 domain and spatial tests passed, including actual GLB surface coverage for every selectable muscle group and paired side, and saved-setting backward compatibility.

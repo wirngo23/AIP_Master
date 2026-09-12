@@ -53,6 +53,7 @@ import { api, download, normalizePhoto } from "@/lib/aip/client";
 import { Portrait, type PortraitHandle } from "./portrait";
 import { Clinical, Connect } from "./clinic";
 import HeadViewer from "./head-viewer";
+import { appearanceAmounts } from "@/lib/aip/appearance";
 
 type Modal = "upload" | "save" | "library" | "consultation" | "privacy" | null;
 export default function Studio({ embedded = false }: { embedded?: boolean }) {
@@ -243,6 +244,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
       lip: a.values[2],
       brow: a.values[3],
     });
+    setSplit(0);
   };
   async function upload(file?: File) {
     if (!file || !adultConsent) return;
@@ -607,6 +609,26 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
               </div>
               {settings.viewer !== "3d" && (
                 <div className="comparison-control">
+                  <div className="preview-modes">
+                    <button
+                      className={split === 100 ? "active" : ""}
+                      onClick={() => setSplit(100)}
+                    >
+                      Original
+                    </button>
+                    <button
+                      className={split === 50 ? "active" : ""}
+                      onClick={() => setSplit(50)}
+                    >
+                      Compare
+                    </button>
+                    <button
+                      className={split === 0 ? "active" : ""}
+                      onClick={() => setSplit(0)}
+                    >
+                      Full preview
+                    </button>
+                  </div>
                   <Slider
                     min={0}
                     max={100}
@@ -675,6 +697,23 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                   <SlidersHorizontal size={16} />
                 </div>
                 <p className="muted">Small shifts. Considered possibilities.</p>
+                <div className="change-receipt" aria-live="polite">
+                  <strong>{selected.name} · applied direction</strong>
+                  <p>
+                    Cheek emphasis ·{" "}
+                    {appearanceAmounts(settings)[1] < 0
+                      ? "softer, narrower jaw"
+                      : "broader jaw definition"}{" "}
+                    · lip fullness · brow elevation.
+                  </p>
+                  <small>
+                    {settings.intensity === 0 ||
+                    settings.phase === 0 ||
+                    settings.phase === 100
+                      ? "Original geometry: intensity or progression is at zero effect. Increase intensity and choose the middle progression to see edits."
+                      : `${settings.intensity}% editing intensity · changes follow detected features in Photo study.`}
+                  </small>
+                </div>
                 {(
                   [
                     ["cheek", "Cheek contour", "Soft definition"],

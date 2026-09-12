@@ -32,6 +32,8 @@ export default function Development() {
             items: [
               "20 preference directions across two optional style collections.",
               "Browser photo preparation, framing, comparison, and conceptual progression.",
+              "On-device facial landmark alignment and visible original / compare / preview modes.",
+              "Clinical dosage discussion records with selected product-specific US label references.",
               "360° reference scan, optional hair silhouettes, and a Clinical Studio schematic muscle explorer.",
               "Account-scoped study storage, optional private photo storage, and deletion.",
               "Private consultation drafts, review notes, and clinic embed configuration.",

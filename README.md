@@ -9,6 +9,8 @@ A working first release of AIP Discover, AIP Clinical Studio, and AIP Connect. A
 - Clinical-only schematic explorer for 25 muscle groups, manual activity/reduction animation, and product/amount demonstration records. Amounts do not drive response predictions. Hair silhouettes are optional and off by default.
 - Twenty optional appearance directions: ten in each of the feminine and masculine collections. Every direction is available to everyone.
 - Local JPG/PNG/WebP upload, browser image normalization, manual framing, WebGL image deformation, before/after comparison, conceptual progression, and labelled JPEG export.
+- Local MediaPipe facial landmark analysis aligns photo edits to detected cheeks, jaw, lips and brows, with framing checks and visible original/compare/full-preview modes.
+- Clinical dosage discussion records include exact product, region, laterality, total and notes, with selected US BOTOX Cosmetic/Dysport label references. Records export locally; they are not prescriptions or dose-driven predictions.
 - Account-scoped saved studies in D1. Uploaded photos are kept in browser memory unless the user separately opts into R2 storage.
 - Private consultation drafts, linked saved studies, review status, notes, export, and permanent deletion.
 - Clinic branding configuration, a functional iframe route, embed-code export, and a private consultation pipeline.
@@ -16,7 +18,7 @@ A working first release of AIP Discover, AIP Clinical Studio, and AIP Connect. A
 
 ## Evidence level and intended use
 
-**This release is an illustrative appearance editor and consultation preparation prototype.** The renderer does not predict Botox/filler outcomes, infer treatment need, measure anatomy, recommend muscles or injection sites, calculate doses, or predict duration. The progression slider is an artistic envelope, not a drug-response curve. The face overlay is a fixed framing guide, not a detected mesh.
+**This release is an illustrative appearance editor and consultation preparation prototype.** The renderer detects visible facial landmarks for editing; it does not measure clinical anatomy, predict Botox/filler outcomes, infer treatment need, recommend injection sites, calculate prescribed doses, or predict duration. The progression slider is an artistic envelope, not a drug-response curve. Overlay points identify the detected editing anchors on the original photo.
 
 The clinical workspace describes the boundary of the future clinical engine. Names such as “Leader” and “Happy” are user-selected style labels; they do not infer personality, competence, or emotional state. Sample portraits do not depict clinical before/after results.
 

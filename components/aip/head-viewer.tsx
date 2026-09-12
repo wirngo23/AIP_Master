@@ -29,6 +29,7 @@ import {
   type HairStyle,
 } from "@/lib/aip/spatial";
 import { download } from "@/lib/aip/client";
+import { appearanceAmounts } from "@/lib/aip/appearance";
 type MuscleView = {
   visible: boolean;
   selected: string;
@@ -370,7 +371,7 @@ export default function HeadViewer({
               const j = i * 3;
               const v = deformPoint(
                 [base[j], base[j + 1], base[j + 2]],
-                [s.cheek / 100, s.jaw / 100, s.lip / 100, s.brow / 100],
+                appearanceAmounts(s),
                 strength,
               );
               p.setXYZ(i, ...v);
