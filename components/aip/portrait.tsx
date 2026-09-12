@@ -12,10 +12,10 @@ import { analyzeFace } from "@/lib/aip/face-analysis";
 export type PortraitHandle = { exportImage: () => Promise<Blob | null> };
 const vertex = `attribute vec2 p; varying vec2 uv; void main(){uv=(p+1.)*.5;gl_Position=vec4(p,0,1);}`;
 const fragment = `precision highp float;
-varying vec2 uv; uniform sampler2D photo; uniform vec4 regions[6]; uniform vec2 moves[6]; uniform vec4 lips; uniform float lipScale; uniform float split; uniform vec2 crop; uniform vec3 alignment;
+varying vec2 uv; uniform sampler2D photo; uniform vec4 regions[8]; uniform vec2 moves[8]; uniform vec4 lips; uniform float lipScale; uniform float split; uniform vec2 crop; uniform vec3 alignment;
 float g(vec2 p,vec2 c,vec2 s){vec2 d=(p-c)/s;return exp(-dot(d,d)*2.);}
 void main(){vec2 source=(uv-.5)/alignment.x+.5-vec2(alignment.y,alignment.z);source=(source-.5)*crop+.5;vec2 q=source;
-if(uv.x>=split){for(int i=0;i<6;i++){q-=moves[i]*g(source,regions[i].xy,regions[i].zw);}
+if(uv.x>=split){for(int i=0;i<8;i++){q-=moves[i]*g(source,regions[i].xy,regions[i].zw);}
 vec2 d=source-lips.xy;q-=d*vec2(.16,1.)*lipScale*g(source,lips.xy,lips.zw);
 }gl_FragColor=texture2D(photo,clamp(q,vec2(.001),vec2(.999)));}`;
 export const Portrait = forwardRef<
@@ -271,8 +271,8 @@ export const Portrait = forwardRef<
       </div>
       {loaded && (
         <div className="portrait-caption">
-          <span>{split>0?"ORIGINAL":""}</span>
-          <span>{split<100?"APPEARANCE PREVIEW":""}</span>
+          <span>{split > 0 ? "ORIGINAL" : ""}</span>
+          <span>{split < 100 ? "APPEARANCE PREVIEW" : ""}</span>
         </div>
       )}
       {loaded && split > 0 && split < 100 && (

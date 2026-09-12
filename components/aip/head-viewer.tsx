@@ -29,7 +29,7 @@ import {
   type HairStyle,
 } from "@/lib/aip/spatial";
 import { download } from "@/lib/aip/client";
-import { appearanceAmounts } from "@/lib/aip/appearance";
+import { appearanceAmounts, expressionAmount } from "@/lib/aip/appearance";
 type MuscleView = {
   visible: boolean;
   selected: string;
@@ -373,6 +373,7 @@ export default function HeadViewer({
                 [base[j], base[j + 1], base[j + 2]],
                 appearanceAmounts(s),
                 strength,
+                expressionAmount(s),
               );
               p.setXYZ(i, ...v);
             }

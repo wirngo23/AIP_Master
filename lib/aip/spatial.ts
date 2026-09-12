@@ -332,6 +332,7 @@ export function deformPoint(
   p: Point,
   a: [number, number, number, number],
   strength: number,
+  smile = 0,
 ): Point {
   const [x, y, z] = p;
   if (z <= 0 || strength === 0) return [...p];
@@ -349,7 +350,8 @@ export function deformPoint(
     y +
       s *
         (0.07 * a[3] * g(side * 0.3, 0.6, 0.2, 0.15) +
-          (y + 0.14) * 0.3 * a[2] * g(0, -0.14, 0.3, 0.2)),
+          (y + 0.14) * 0.3 * a[2] * g(0, -0.14, 0.3, 0.2) +
+          0.07 * smile * g(side * 0.23, -0.14, 0.12, 0.12)),
     z + s * 0.08 * a[2] * g(0, -0.14, 0.3, 0.17),
   ];
 }

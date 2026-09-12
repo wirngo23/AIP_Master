@@ -1,24 +1,30 @@
-import { progression, type Settings } from "./domain.ts";
+import { ARCHETYPES, progression, type Settings } from "./domain.ts";
 export type XY = { x: number; y: number };
 export type FaceGeometry = {
   cheeks: [XY, XY];
   jaw: [XY, XY];
   brows: [XY, XY];
   lips: XY;
+  corners: [XY, XY];
   width: number;
   height: number;
   lipWidth: number;
   lipHeight: number;
 };
-const softerJaw = new Set(["F01", "F02", "F03", "F04", "M05", "M06", "M07"]);
+function motion(s: Settings) {
+  return ARCHETYPES.find((a) => a.id === s.archetype)!.motion;
+}
+export function expressionAmount(s: Settings) {
+  return motion(s).smile;
+}
 export function appearanceAmounts(
   s: Settings,
 ): [number, number, number, number] {
   return [
-    s.cheek / 100,
-    (s.jaw / 100) * (softerJaw.has(s.archetype) ? -1 : 1),
+    (s.cheek / 100) * motion(s).cheek,
+    (s.jaw / 100) * motion(s).jaw,
     s.lip / 100,
-    s.brow / 100,
+    (s.brow / 100) * motion(s).brow,
   ];
 }
 export function geometryFromLandmarks(
@@ -61,6 +67,7 @@ export function geometryFromLandmarks(
     cheeks: pair(205, 425),
     jaw: pair(132, 361),
     brows: pair(105, 334),
+    corners: pair(61, 291),
     lips: {
       x: (points[13].x + points[14].x) / 2,
       y: 1 - (points[13].y + points[14].y) / 2,
@@ -81,6 +88,7 @@ export function createWarp(s: Settings, face: FaceGeometry) {
     [face.cheeks, cheek, 0.3, 0.2, false],
     [face.jaw, jaw, 0.28, 0.24, false],
     [face.brows, brow, 0.23, 0.12, true],
+    [face.corners, expressionAmount(s) * 0.5, 0.13, 0.09, true],
   ] as const)
     for (let i = 0; i < 2; i++) {
       regions.push(

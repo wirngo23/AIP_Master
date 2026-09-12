@@ -42,6 +42,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import {
   ARCHETYPES,
+  applyArchetype,
   DEFAULT_SETTINGS,
   settingsSchema,
   type Settings,
@@ -53,7 +54,6 @@ import { api, download, normalizePhoto } from "@/lib/aip/client";
 import { Portrait, type PortraitHandle } from "./portrait";
 import { Clinical, Connect } from "./clinic";
 import HeadViewer from "./head-viewer";
-import { appearanceAmounts } from "@/lib/aip/appearance";
 
 type Modal = "upload" | "save" | "library" | "consultation" | "privacy" | null;
 export default function Studio({ embedded = false }: { embedded?: boolean }) {
@@ -193,7 +193,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
           const a = ARCHETYPES.find((a) => a.id === value.archetype);
           if (!a) throw new Error("Unknown direction.");
           const next = settingsSchema.parse({
-            ...current.current,
+            ...applyArchetype(current.current, a.id),
             archetype: a.id,
             intensity: value.intensity,
             cheek: a.values[0],
@@ -237,13 +237,13 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
   };
   const choose = (id: string) => {
     const a = ARCHETYPES.find((a) => a.id === id)!;
-    update({
-      archetype: id,
-      cheek: a.values[0],
-      jaw: a.values[1],
-      lip: a.values[2],
-      brow: a.values[3],
+    setSettings((s) => {
+      const next = applyArchetype(s, id);
+      if (a.family === family) next.viewer = s.viewer;
+      return next;
     });
+    setFamily(a.family);
+    setActiveStudy(null);
     setSplit(0);
   };
   async function upload(file?: File) {
@@ -493,11 +493,11 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                 <Sparkles size={16} />
               </div>
               <p className="muted">
-                A feeling to explore. Always on your terms.
+                Choose your archetype. Refine the look on your terms.
               </p>
               <Tabs
                 value={family}
-                onValueChange={(v) => setFamily(v as Family)}
+                onValueChange={(v) => choose(v === "masculine" ? "M01" : "F01")}
               >
                 <TabsList className="family-tabs">
                   <TabsTrigger value="feminine">
@@ -525,7 +525,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                 ))}
               </div>
               <div className="direction-note">
-                <span className="tiny-label">YOUR DIRECTION</span>
+                <span className="tiny-label">YOUR ARCHETYPE</span>
                 <h3>{selected.name}</h3>
                 <p>{selected.description}</p>
               </div>
@@ -698,14 +698,8 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                 </div>
                 <p className="muted">Small shifts. Considered possibilities.</p>
                 <div className="change-receipt" aria-live="polite">
-                  <strong>{selected.name} · applied direction</strong>
-                  <p>
-                    Cheek emphasis ·{" "}
-                    {appearanceAmounts(settings)[1] < 0
-                      ? "softer, narrower jaw"
-                      : "broader jaw definition"}{" "}
-                    · lip fullness · brow elevation.
-                  </p>
+                  <strong>{selected.name} · preset intent</strong>
+                  <p>{selected.description}</p>
                   <small>
                     {settings.intensity === 0 ||
                     settings.phase === 0 ||
@@ -732,7 +726,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                       onValueChange={(v) => update({ [key]: v[0] })}
                       aria-label={label}
                     />
-                    <small>{sub}</small>
+                    <small>{key==="brow"?(selected.motion.brow<0?"Gentle brow lowering":"Brow elevation"):sub}</small>
                   </div>
                 ))}
                 <div className="evidence-note">
@@ -768,23 +762,40 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
               <button
                 className={settings.sample === "woman" ? "active" : ""}
                 onClick={() => {
-                  update({
-                    sample: "woman",
-                    alignment: { zoom: 1, x: 0, y: 0 },
-                  });
+                  update(
+                    applyArchetype(
+                      {
+                        ...settings,
+                        sample: "woman",
+                        alignment: { zoom: 1, x: 0, y: 0 },
+                      },
+                      "F01",
+                    ),
+                  );
+                  setFamily("feminine");
                 }}
               >
                 <img src="/images/woman-portrait.png" alt="" />
-                Sample 01
+                Woman sample
               </button>
               <button
                 className={settings.sample === "man" ? "active" : ""}
                 onClick={() => {
-                  update({ sample: "man", alignment: { zoom: 1, x: 0, y: 0 } });
+                  update(
+                    applyArchetype(
+                      {
+                        ...settings,
+                        sample: "man",
+                        alignment: { zoom: 1, x: 0, y: 0 },
+                      },
+                      "M01",
+                    ),
+                  );
+                  setFamily("masculine");
                 }}
               >
                 <img src="/images/man-portrait.png" alt="" />
-                Sample 02
+                Man sample
               </button>
               {photo && (
                 <button
@@ -801,12 +812,14 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                 className="text-link"
                 onClick={() => {
                   setSettings((s) => ({
-                    ...DEFAULT_SETTINGS,
+                    ...applyArchetype(
+                      { ...DEFAULT_SETTINGS, sample: s.sample },
+                      family === "masculine" ? "M01" : "F01",
+                    ),
                     sample: s.sample,
                     viewer: s.viewer ?? "photo",
                     alignment: s.alignment,
                   }));
-                  setFamily("feminine");
                   setSplit(50);
                   setActiveStudy(null);
                 }}

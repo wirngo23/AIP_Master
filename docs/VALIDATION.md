@@ -1,5 +1,11 @@
 # Validation record — foundation release
 
+## Archetype consistency update — September 12, 2026
+
+- Collection selection previously changed only the displayed option list. It now selects a matching sample portrait and preset together. Uploaded portraits are preserved, direct sample controls synchronize the collection, and Reset keeps the selected collection.
+- All 20 presets have explicit motion directions and matching concrete descriptions. Happy/Expressive/Approachable include mouth-corner lift; Relaxed uses gentle brow lowering. Photo and 3D renderers share the motion metadata.
+- 22 tests and TypeScript checks passed. Regression coverage includes masculine/feminine switching, upload preservation and directional motion differences. Source review caught and corrected an inert Mature brow slider; it now begins neutral and remains editable. No browser interaction testing was performed.
+
 ## Landmark and dosage update — September 12, 2026
 
 - All 18 tests and TypeScript checks passed, including shader syntax, detected-coordinate warp geometry and strict dosage record validation.

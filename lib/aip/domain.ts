@@ -6,6 +6,51 @@ export type Archetype = {
   name: string;
   description: string;
   values: [number, number, number, number];
+  motion: { cheek: number; jaw: number; brow: number; smile: number };
+};
+const motions: Record<string, Archetype["motion"]> = {
+  F01: { cheek: -1, jaw: -1, brow: 0.3, smile: 0 },
+  F02: { cheek: 1, jaw: -1, brow: 1, smile: 0 },
+  F03: { cheek: 1, jaw: -1, brow: 1, smile: 0.7 },
+  F04: { cheek: -1, jaw: -1, brow: -0.6, smile: 0 },
+  F05: { cheek: 1, jaw: 1, brow: 0.5, smile: 0 },
+  F06: { cheek: 1, jaw: 1, brow: 0.4, smile: 0 },
+  F07: { cheek: 1, jaw: 1, brow: -0.3, smile: 0 },
+  F08: { cheek: 1, jaw: -1, brow: 0.5, smile: 0.1 },
+  F09: { cheek: 1, jaw: 1, brow: 1, smile: 0.4 },
+  F10: { cheek: 1, jaw: 1, brow: 0.5, smile: 0 },
+  M01: { cheek: 1, jaw: 1, brow: -0.3, smile: 0 },
+  M02: { cheek: 1, jaw: 1, brow: -0.5, smile: 0 },
+  M03: { cheek: 1, jaw: 1, brow: -0.3, smile: 0 },
+  M04: { cheek: 1, jaw: 1, brow: 1, smile: 0 },
+  M05: { cheek: 1, jaw: -1, brow: 0.7, smile: 0.2 },
+  M06: { cheek: -1, jaw: -1, brow: -0.6, smile: 0 },
+  M07: { cheek: -1, jaw: -1, brow: 0.6, smile: 0.5 },
+  M08: { cheek: 1, jaw: 1, brow: 0.2, smile: 0 },
+  M09: { cheek: 1, jaw: 1, brow: 0.3, smile: 0 },
+  M10: { cheek: 1, jaw: -1, brow: 0.3, smile: 0.1 },
+};
+const descriptions: Record<string, string> = {
+  F01: "Gently narrow the cheeks and jaw, add modest lip fullness, and make a small brow lift.",
+  F02: "Emphasize the cheeks, narrow the jaw, add lip fullness, and lift the brows.",
+  F03: "Lift the mouth corners and brows, emphasize the cheeks, and soften the jaw width.",
+  F04: "Gently lower the brows, narrow the cheeks and jaw, and keep lip changes small. Mouth corners stay unchanged.",
+  F05: "Add moderate cheek and jaw width with restrained lip fullness and a small brow lift.",
+  F06: "Add pronounced cheek and jaw width, with modest lip fullness and a small brow lift.",
+  F07: "Emphasize jaw width and cheek structure, with gently lowered brows and restrained lip fullness.",
+  F08: "Add small cheek and lip changes, subtly narrow the jaw, and make a slight brow and mouth-corner lift.",
+  F09: "Lift the brows and mouth corners, with added cheek and jaw width and lip fullness.",
+  F10: "Add moderate cheek and jaw width, modest lip fullness, and a small brow lift. Mouth corners stay unchanged.",
+  M01: "Emphasize a wider jaw and cheek structure, gently lower the brows, and keep lip changes small.",
+  M02: "Add strong jaw and cheek width, with lowered brows and restrained lip fullness.",
+  M03: "Add moderate jaw and cheek width, gently lower the brows, and keep lip changes small.",
+  M04: "Add modest jaw and cheek width and a little lip fullness. Brow height and mouth corners stay unchanged.",
+  M05: "Narrow the jaw, emphasize cheeks and lips, and make a gentle brow and mouth-corner lift.",
+  M06: "Gently lower the brows, narrow the cheeks and jaw, and keep lip changes small. Mouth corners stay unchanged.",
+  M07: "Narrow the cheeks and jaw and lift the mouth corners, with a gentle brow lift and modest lip fullness.",
+  M08: "Add pronounced jaw and cheek width, with minimal lip fullness and a small brow lift.",
+  M09: "Add moderate jaw and cheek width, with restrained lip fullness and a small brow lift.",
+  M10: "Make small cheek and lip changes, subtly narrow the jaw, and add a slight brow and mouth-corner lift.",
 };
 const female: [string, string, Archetype["values"]][] = [
   [
@@ -67,7 +112,7 @@ const male: [string, string, Archetype["values"]][] = [
     [45, 62, 14, 32],
   ],
   ["Executive", "Composed contours and considered emphasis.", [36, 50, 12, 28]],
-  ["Mature", "Subtle structure that retains your character.", [30, 40, 10, 20]],
+  ["Mature", "Subtle structure that retains your character.", [30, 40, 10, 0]],
   [
     "Pretty boy",
     "A softer adult style with smooth visual contours.",
@@ -100,14 +145,18 @@ export const ARCHETYPES: Archetype[] = [
     id: `F${String(i + 1).padStart(2, "0")}`,
     family: "feminine" as const,
     name,
-    description,
+    description:
+      descriptions[`F${String(i + 1).padStart(2, "0")}`] ?? description,
+    motion: motions[`F${String(i + 1).padStart(2, "0")}`],
     values,
   })),
   ...male.map(([name, description, values], i) => ({
     id: `M${String(i + 1).padStart(2, "0")}`,
     family: "masculine" as const,
     name,
-    description,
+    description:
+      descriptions[`M${String(i + 1).padStart(2, "0")}`] ?? description,
+    motion: motions[`M${String(i + 1).padStart(2, "0")}`],
     values,
   })),
 ];
@@ -144,6 +193,27 @@ export const consultationSchema = z.object({
   followup: z.boolean(),
 });
 export type Settings = z.infer<typeof settingsSchema>;
+export function applyArchetype(s: Settings, id: string): Settings {
+  const a = ARCHETYPES.find((a) => a.id === id);
+  if (!a) throw Error("Unknown archetype");
+  const sample =
+    s.sample === "upload"
+      ? "upload"
+      : a.family === "masculine"
+        ? "man"
+        : "woman";
+  return {
+    ...s,
+    archetype: id,
+    sample,
+    viewer: s.sample === "upload" ? s.viewer : "photo",
+    alignment: sample === s.sample ? s.alignment : { zoom: 1, x: 0, y: 0 },
+    cheek: a.values[0],
+    jaw: a.values[1],
+    lip: a.values[2],
+    brow: a.values[3],
+  };
+}
 export const DEFAULT_SETTINGS: Settings = {
   archetype: "F01",
   intensity: 45,
