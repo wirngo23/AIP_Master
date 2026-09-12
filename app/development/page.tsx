@@ -19,9 +19,9 @@ export default function Development() {
       <div className="workspace-notice">
         <ShieldCheck size={20} />
         <span>
-          This release uses texture-preserving image deformation. It does not
-          model Botox dose, filler volume, muscle response, injection sites, or
-          patient-specific wear-off.
+          This release offers a rotatable reference scan and illustrative photo
+          editing. It does not model Botox dose, filler volume, muscle response,
+          injection sites, or patient-specific wear-off.
         </span>
       </div>
       <div className="roadmap-grid">
@@ -32,6 +32,7 @@ export default function Development() {
             items: [
               "20 preference directions across two optional style collections.",
               "Browser photo preparation, framing, comparison, and conceptual progression.",
+              "360° reference scan, optional hair silhouettes, and a Clinical Studio schematic muscle explorer.",
               "Account-scoped study storage, optional private photo storage, and deletion.",
               "Private consultation drafts, review notes, and clinic embed configuration.",
             ],
@@ -78,6 +79,57 @@ export default function Development() {
           </section>
         ))}
       </div>
+      <section
+        id="anatomy-evidence"
+        className="panel roadmap-card"
+        style={{ marginTop: 20 }}
+      >
+        <h2>What the 3D explorer represents</h2>
+        <p>
+          The reference head is a licensed scan of a separate person. Uploaded
+          photographs stay two-dimensional; personal 3D reconstruction requires
+          additional capture or a validated reconstruction service. Hair options
+          are illustrative silhouettes.
+        </p>
+        <p>
+          Clinical Studio shows 25 schematic muscle groups, including paired
+          regions. This is not an exhaustive anatomy atlas or an injection map.
+          Movement and reduction controls are manually chosen illustrations,
+          independent of entered product amounts. Filler volume does not drive
+          muscle paralysis. Clinical workspace selection is not verification of
+          professional credentials.
+        </p>
+        <p>
+          Muscle actions are summarized from{" "}
+          <a
+            href="https://openstax.org/books/anatomy-and-physiology-2e/pages/11-3-axial-muscles-of-the-head-neck-and-back"
+            target="_blank"
+            rel="noreferrer"
+          >
+            OpenStax anatomy
+          </a>
+          . Product-specific toxin units are not interchangeable; see{" "}
+          <a
+            href="https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=485d9b71-6881-42c5-a620-a4360c7192ab"
+            target="_blank"
+            rel="noreferrer"
+          >
+            the BOTOX Cosmetic prescribing information
+          </a>
+          . No dose recommendation is supplied.
+        </p>
+        <p>
+          Reference scan: Lee Perry-Smith / Infinite Realities,{" "}
+          <a
+            href="https://creativecommons.org/licenses/by/3.0/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            CC BY 3.0
+          </a>
+          . Appearance and overlays are modified for this demonstration.
+        </p>
+      </section>
       <section className="panel roadmap-card" style={{ marginTop: 20 }}>
         <Aperture size={28} />
         <h2>Differentiation is a hypothesis to prove.</h2>

@@ -122,6 +122,8 @@ export const settingsSchema = z
     brow: percent,
     phase: percent,
     sample: z.enum(["woman", "man", "upload"]),
+    viewer: z.enum(["photo", "3d"]).optional(),
+    hair: z.enum(["default", "crop", "swept", "bob"]).optional(),
     alignment: z.object({
       zoom: z.number().min(1).max(2),
       x: z.number().min(-0.3).max(0.3),
@@ -151,6 +153,8 @@ export const DEFAULT_SETTINGS: Settings = {
   brow: 30,
   phase: 50,
   sample: "woman",
+  viewer: "3d",
+  hair: "default",
   alignment: { zoom: 1, x: 0, y: 0 },
 };
 export function progression(phase: number) {

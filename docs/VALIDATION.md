@@ -1,5 +1,14 @@
 # Validation record — foundation release
 
+## 360° update — September 12, 2026
+
+- All 11 domain and spatial tests passed, including actual GLB surface coverage for every selectable muscle group and paired side, and saved-setting backward compatibility.
+- TypeScript checking and the production build passed. The build reports a large JavaScript chunk warning for the graphics dependency; performance across target devices remains unmeasured.
+- Independent source review identified missing side-face patches and a transparency shader update defect. Both were fixed and the reviewer confirmed the corrections.
+- No browser interaction or visual QA was performed for this update. This does not verify photorealism, anatomical fidelity, or clinical dose response. See [spatial scope](SPATIAL_RELEASE.md).
+
+## Earlier foundation checks
+
 - Domain tests passed: 20 unique archetypes; bounded settings; invalid directions and non-finite inputs rejected; conceptual progression endpoints and bounds; contact consent/email validation; same-origin write checks.
 - TypeScript type checking passed.
 - Production Worker build passed, including the frontend, API routes, D1/R2 manifest, and generated schema migration.

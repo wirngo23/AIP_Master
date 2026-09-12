@@ -49,6 +49,8 @@ import {
   type Settings,
 } from "@/lib/aip/domain";
 import { api, download } from "@/lib/aip/client";
+import ClinicalSpatial from "./clinical-spatial";
+import HeadViewer from "./head-viewer";
 
 export function Clinical({
   settings,
@@ -94,6 +96,7 @@ export function Clinical({
           validated clinical system.
         </span>
       </div>
+      <ClinicalSpatial settings={settings} />
       <div className="clinical-grid">
         <aside className="panel clinical-checklist">
           <p className="eyebrow">CONSULTATION PREPARATION</p>
@@ -128,23 +131,29 @@ export function Clinical({
             appropriate clinical record.
           </p>
         </aside>
-        <div className="panel clinical-image">
-          {src ? (
-            <img src={src} alt="Current study original portrait" />
-          ) : (
-            <p className="missing-clinical-photo">
-              Re-upload the original portrait in Discover to view this study.
-            </p>
-          )}
+        <div className="panel clinical-study-summary">
           <div>
             <span className="tiny-label">CURRENT APPEARANCE DIRECTION</span>
             <h2>{active.name}</h2>
             <p>
-              Original image ·{" "}
+              Photo-study source ·{" "}
               {settings.sample === "upload"
                 ? "Your portrait"
                 : "Fictional sample portrait"}
             </p>
+            <p className="muted">
+              The rotatable model above is a separate reference scan. It is not
+              reconstructed from this person's photo.
+            </p>
+            {src && (
+              <details>
+                <summary>View the original photo</summary>
+                <img
+                  src={src}
+                  alt="Original photo study, separate from the 3D reference scan"
+                />
+              </details>
+            )}
           </div>
         </div>
         <section className="panel pathway-panel">
@@ -590,16 +599,7 @@ export function Connect({
               Explore an appearance direction and prepare for a personal
               consultation.
             </p>
-            <div className="mini-portraits">
-              <img
-                src="/images/woman-portrait.png"
-                alt="Fictional woman sample portrait"
-              />
-              <img
-                src="/images/man-portrait.png"
-                alt="Fictional man sample portrait"
-              />
-            </div>
+            <HeadViewer compact />
             <button
               className="primary-button"
               onClick={() => setPreview((v) => !v)}

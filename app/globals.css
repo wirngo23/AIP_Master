@@ -2185,3 +2185,467 @@ html[data-accent="rose"] .primary-button {
   line-height: 1.8;
   color: #a6c9b2;
 }
+/* Spatial exploration */
+[hidden] {
+  display: none !important;
+}
+.viewer-mode {
+  width: calc(100% - 28px) !important;
+  margin: 0 14px 8px;
+  background: #0a1415 !important;
+  height: 36px !important;
+}
+.viewer-mode button {
+  font-size: 12px !important;
+}
+.viewer-mode button[data-state="active"] {
+  background: #29483b !important;
+  color: #c9fbe3 !important;
+}
+.portrait-stage.spatial-stage {
+  aspect-ratio: auto;
+  overflow: visible;
+}
+.head-viewer {
+  position: relative;
+  background: radial-gradient(
+    ellipse at 50% 45%,
+    #263a37 0%,
+    #152324 48%,
+    #101a1c 77%
+  );
+  overflow: hidden;
+  color: #c9e4d6;
+}
+.head-canvas {
+  height: 490px;
+  width: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+.head-canvas:active {
+  cursor: grabbing;
+}
+.head-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline-offset: -4px;
+}
+.spatial-label {
+  position: absolute;
+  top: 17px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  font: 9px monospace;
+  letter-spacing: 1.3px;
+  color: #a0c7b5;
+  z-index: 1;
+  pointer-events: none;
+}
+.spatial-label > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.spatial-hint {
+  text-align: center;
+  font-size: 11px;
+  color: #91b5a3;
+  margin: -22px 0 17px;
+  position: relative;
+  pointer-events: none;
+}
+.spatial-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 17px;
+  border-top: 1px solid #32453e;
+  background: #12211c;
+}
+.view-presets,
+.spatial-icons {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.view-presets button {
+  text-transform: capitalize;
+  border: 1px solid #385646;
+  border-radius: 5px;
+  background: #20362c;
+  padding: 7px 9px;
+  font-size: 11px;
+  color: #c7e6d3;
+  min-height: 32px;
+}
+.spatial-icons .icon-button {
+  min-width: 29px;
+  min-height: 31px;
+}
+.head-loading {
+  position: absolute;
+  inset: 0 0 auto;
+  min-height: 490px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 15px;
+  pointer-events: none;
+  background: #101c1bd9;
+  padding: 30px;
+  text-align: center;
+  font-size: 14px;
+}
+.head-loading p {
+  max-width: 300px;
+  font-size: 12px;
+  color: #c3a495;
+  overflow-wrap: anywhere;
+}
+.spatial-appearance {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #14251e;
+  border-top: 1px solid #2a4335;
+}
+.spatial-appearance label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.scan-attribution {
+  padding: 12px 18px;
+  font-size: 10px;
+  line-height: 1.7;
+  color: #89a99a;
+  background: #101d18;
+  margin: 0;
+}
+.scan-attribution a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: #b7d4c5;
+}
+.hair-options {
+  display: grid;
+  grid-template-columns: 1fr 34px;
+  gap: 12px;
+  background: #172d21;
+  padding: 16px 18px;
+}
+.hair-options [data-slot="select-trigger"] {
+  width: 100%;
+  font-size: 12px;
+}
+.hair-options p {
+  grid-column: 1/-1;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #a8c5b4;
+}
+.clinical-spatial {
+  display: grid;
+  grid-template-columns: minmax(380px, 1.35fr) minmax(340px, 1fr);
+  gap: 24px;
+  margin-bottom: 26px;
+  align-items: start;
+}
+.clinical-3d-panel {
+  overflow: hidden;
+}
+.clinical-3d-panel .head-canvas {
+  height: 590px;
+}
+.clinical-3d-panel .head-loading {
+  min-height: 590px;
+}
+.anatomy-panel {
+  padding: 25px;
+}
+.anatomy-panel .panel-heading h2 {
+  font-size: 21px;
+}
+.clinical-exclusive {
+  border: 1px solid #50634c;
+  color: #b4cfa6;
+  background: #283622;
+  padding: 5px;
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+}
+.anatomy-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-top: 1px solid #365240;
+  border-bottom: 1px solid #365240;
+  padding: 20px 0;
+  margin-top: 23px;
+}
+.anatomy-toggle strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+}
+.anatomy-toggle small {
+  display: block;
+  font-size: 11px;
+  color: #97b09b;
+  margin-top: 6px;
+}
+.anatomy-content > .workspace-notice {
+  font-size: 11px;
+  margin: 18px 0;
+}
+.anatomy-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #b2ccb8;
+  margin: 16px 0;
+}
+.muscle-description {
+  padding: 17px 0 20px;
+  border-bottom: 1px solid #36523e;
+  margin-bottom: 20px;
+}
+.muscle-description h3 {
+  font-size: 21px;
+  font-weight: 400;
+  margin: 9px 0;
+}
+.muscle-description p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #a5bea9;
+}
+.animate-muscle {
+  margin-top: 20px;
+  width: 100%;
+  font-size: 13px;
+}
+.scenario-disclosure {
+  margin: 20px 0;
+  border-top: 1px solid #3d513c;
+  padding-top: 17px;
+}
+.scenario-disclosure summary {
+  font-size: 13px;
+  color: #cde7d0;
+  cursor: pointer;
+}
+.scenario-disclosure > .micro-copy {
+  margin-top: 15px;
+}
+.scenario-disclosure .form-field {
+  margin-top: 13px;
+}
+.scenario-disclosure .range-label {
+  margin-top: 23px;
+}
+.scenario-disclosure .secondary-button {
+  margin-top: 18px;
+  width: 100%;
+  font-size: 12px;
+}
+.anatomy-off {
+  min-height: 330px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  padding: 35px 22px;
+  gap: 17px;
+  color: #9bbc9f;
+}
+.anatomy-off h3 {
+  font-size: 22px;
+  font-weight: 400;
+}
+.anatomy-off p {
+  font-size: 14px;
+  line-height: 1.8;
+  max-width: 290px;
+  color: #93b19c;
+}
+.anatomy-off svg {
+  stroke-width: 1;
+}
+.clinical-study-summary {
+  padding: 27px;
+}
+.clinical-study-summary h2 {
+  font-size: 27px;
+  margin: 13px 0;
+}
+.clinical-study-summary p {
+  font-size: 13px;
+  line-height: 1.8;
+  margin-bottom: 20px;
+  color: #a7c0ab;
+}
+.clinical-study-summary details summary {
+  font-size: 13px;
+  color: #c5e5d1;
+  cursor: pointer;
+}
+.clinical-study-summary img {
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 18px;
+}
+.compact-head {
+  border: 1px solid #385842;
+  border-radius: 12px;
+  margin: 20px 0;
+}
+.compact-head .head-canvas {
+  height: 320px;
+}
+.compact-head .head-loading {
+  min-height: 320px;
+}
+.compact-head .spatial-label {
+  font-size: 8px;
+}
+.compact-head .spatial-controls {
+  padding: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.compact-head .scan-attribution {
+  text-align: left;
+  font-size: 9px;
+}
+.compact-head .spatial-hint {
+  font-size: 10px;
+}
+.expanded-portrait .spatial-stage {
+  max-height: none;
+}
+.clinical-spatial .head-viewer .scan-attribution {
+  font-size: 11px;
+}
+@media (max-width: 1180px) {
+  .spatial-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .head-canvas {
+    height: 440px;
+  }
+  .head-loading {
+    min-height: 440px;
+  }
+  .clinical-spatial {
+    grid-template-columns: 1.1fr 1fr;
+    gap: 18px;
+  }
+  .clinical-3d-panel .head-canvas {
+    height: 510px;
+  }
+  .clinical-3d-panel .head-loading {
+    min-height: 510px;
+  }
+  .anatomy-panel {
+    padding: 22px;
+  }
+  .anatomy-panel .panel-heading {
+    flex-wrap: wrap;
+  }
+  .anatomy-panel .panel-heading h2 {
+    font-size: 19px;
+  }
+}
+@media (max-width: 800px) {
+  .clinical-spatial {
+    grid-template-columns: 1fr;
+  }
+  .clinical-3d-panel .head-canvas {
+    height: 520px;
+  }
+  .clinical-3d-panel .head-loading {
+    min-height: 520px;
+  }
+  .anatomy-off {
+    min-height: 180px;
+  }
+  .spatial-controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .anatomy-panel .panel-heading h2 {
+    font-size: 22px;
+  }
+}
+@media (max-width: 650px) {
+  .head-canvas {
+    height: 440px;
+  }
+  .head-loading {
+    min-height: 440px;
+  }
+  .spatial-controls {
+    gap: 9px;
+    justify-content: center;
+    padding: 12px;
+  }
+  .spatial-appearance {
+    gap: 8px;
+    padding: 13px 14px;
+  }
+  .spatial-appearance label {
+    font-size: 11px;
+  }
+  .scan-attribution {
+    font-size: 11px;
+  }
+  .clinical-3d-panel .head-canvas {
+    height: 480px;
+  }
+  .clinical-3d-panel .head-loading {
+    min-height: 480px;
+  }
+  .hair-options p {
+    font-size: 12px;
+  }
+  .anatomy-panel {
+    padding: 22px;
+  }
+  .clinical-exclusive {
+    font-size: 8px;
+  }
+  .compact-head .head-canvas {
+    height: 300px;
+  }
+  .clinical-study-summary {
+    padding: 25px;
+  }
+  .viewer-mode button {
+    font-size: 12px !important;
+  }
+}
+.saved-spatial-icon {
+  width: 58px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--accent);
+  background: #142a26;
+  border-radius: 8px;
+}

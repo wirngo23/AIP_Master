@@ -24,6 +24,23 @@ const settings = {
   sample: "woman",
   alignment: { zoom: 1, x: 0, y: 0 },
 };
+test("new spatial settings persist while legacy photo studies remain compatible", () => {
+  const legacy = studySchema.parse({ title: "Legacy", settings });
+  assert.equal(legacy.settings.viewer, undefined);
+  const spatial = studySchema.parse({
+    title: "Reference",
+    settings: { ...settings, viewer: "3d", hair: "bob" },
+  });
+  assert.equal(spatial.settings.viewer, "3d");
+  assert.equal(spatial.settings.hair, "bob");
+  assert.equal(
+    studySchema.safeParse({
+      title: "Invalid",
+      settings: { ...settings, hair: "unknown" },
+    }).success,
+    false,
+  );
+});
 test("study validation rejects arbitrary directions, excessive values, and non-finite input", () => {
   assert.equal(
     studySchema.safeParse({ title: "My study", settings }).success,

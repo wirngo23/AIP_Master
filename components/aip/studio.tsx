@@ -12,6 +12,7 @@ import {
   Layers3,
   Maximize2,
   RotateCcw,
+  Rotate3D,
   Save,
   ShieldCheck,
   SlidersHorizontal,
@@ -51,6 +52,7 @@ import {
 import { api, download, normalizePhoto } from "@/lib/aip/client";
 import { Portrait, type PortraitHandle } from "./portrait";
 import { Clinical, Connect } from "./clinic";
+import HeadViewer from "./head-viewer";
 
 type Modal = "upload" | "save" | "library" | "consultation" | "privacy" | null;
 export default function Studio({ embedded = false }: { embedded?: boolean }) {
@@ -94,7 +96,11 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
       ? photo
       : `/images/${settings.sample === "man" ? "man" : "woman"}-portrait.png`;
   const update = (patch: Partial<Settings>) => {
-    setSettings((s) => ({ ...s, ...patch }));
+    setSettings((s) => ({
+      ...s,
+      ...patch,
+      ...(patch.sample ? { viewer: "photo" as const } : {}),
+    }));
     setActiveStudy(null);
   };
   const refresh = useCallback(async () => {
@@ -115,7 +121,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
     void refresh().catch(() => {});
     const q = new URLSearchParams(window.location.search);
     const v = q.get("view");
-    if (v === "clinical" || v === "connect") setView(v);
+    if (!embedded && (v === "clinical" || v === "connect")) setView(v);
     if (embedded) {
       setClinicName((q.get("clinic") || "Your clinic").slice(0, 80));
       const accent = q.get("accent");
@@ -547,13 +553,33 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                   <span className="live-dot" /> APPEARANCE EXPLORATION
                 </span>
                 <span className="sample-label">
-                  {settings.sample === "upload"
-                    ? "YOUR PORTRAIT"
-                    : "FICTIONAL SAMPLE"}
+                  {settings.viewer === "3d"
+                    ? "3D REFERENCE"
+                    : settings.sample === "upload"
+                      ? "YOUR PORTRAIT"
+                      : "FICTIONAL SAMPLE"}
                 </span>
               </div>
-              <div className="portrait-stage" ref={stage}>
-                {settings.sample === "upload" && !photo ? (
+              <Tabs
+                value={settings.viewer ?? "photo"}
+                onValueChange={(v) => update({ viewer: v as "photo" | "3d" })}
+              >
+                <TabsList className="viewer-mode">
+                  <TabsTrigger value="3d">360° reference head</TabsTrigger>
+                  <TabsTrigger value="photo">Photo study</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <div
+                className={`portrait-stage ${settings.viewer === "3d" ? "spatial-stage" : ""}`}
+                ref={stage}
+              >
+                {settings.viewer === "3d" ? (
+                  <HeadViewer
+                    settings={settings}
+                    hair={settings.hair ?? "default"}
+                    onHairChange={(hair) => update({ hair })}
+                  />
+                ) : settings.sample === "upload" && !photo ? (
                   <div className="missing-portrait">
                     <ImagePlus size={40} />
                     <h3>Your original portrait is needed.</h3>
@@ -579,25 +605,27 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                   />
                 )}
               </div>
-              <div className="comparison-control">
-                <Slider
-                  min={0}
-                  max={100}
-                  value={[split]}
-                  onValueChange={(v) => setSplit(v[0])}
-                  aria-label="Before and after comparison position"
-                />
-                <div className="range-endpoints">
-                  <span>Drag to compare</span>
-                  <span>
-                    {split === 0
-                      ? "Full preview"
-                      : split === 100
-                        ? "Original only"
-                        : "Original ↔ Preview"}
-                  </span>
+              {settings.viewer !== "3d" && (
+                <div className="comparison-control">
+                  <Slider
+                    min={0}
+                    max={100}
+                    value={[split]}
+                    onValueChange={(v) => setSplit(v[0])}
+                    aria-label="Before and after comparison position"
+                  />
+                  <div className="range-endpoints">
+                    <span>Drag to compare</span>
+                    <span>
+                      {split === 0
+                        ? "Full preview"
+                        : split === 100
+                          ? "Original only"
+                          : "Original ↔ Preview"}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="viewport-bottom">
                 <button
                   className="privacy-link"
@@ -608,6 +636,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                 <div>
                   <button
                     className={`icon-button ${overlay ? "active" : ""}`}
+                    hidden={settings.viewer === "3d"}
                     aria-label="Toggle illustrative facial overlay"
                     aria-pressed={overlay}
                     onClick={() => setOverlay((v) => !v)}
@@ -627,6 +656,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                   <button
                     className="icon-button"
                     aria-label="Download illustrative comparison"
+                    hidden={settings.viewer === "3d"}
                     disabled={
                       !ready || (settings.sample === "upload" && !photo)
                     }
@@ -734,6 +764,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                   setSettings((s) => ({
                     ...DEFAULT_SETTINGS,
                     sample: s.sample,
+                    viewer: s.viewer ?? "photo",
                     alignment: s.alignment,
                   }));
                   setFamily("feminine");
@@ -828,25 +859,29 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
             </div>
           </section>
         </TabsContent>
-        <TabsContent value="clinical">
-          <Clinical
-            settings={settings}
-            src={settings.sample === "upload" && !photo ? "" : src}
-            studies={studies}
-            consultations={consultations}
-            onRefresh={refresh}
-            onOpenStudy={openStudy}
-            onNewConsultation={newConsultation}
-          />
-        </TabsContent>
-        <TabsContent value="connect">
-          <Connect
-            studies={studies}
-            consultations={consultations}
-            onRefresh={refresh}
-            onOpenStudy={openStudy}
-          />
-        </TabsContent>
+        {!embedded && (
+          <TabsContent value="clinical">
+            <Clinical
+              settings={settings}
+              src={settings.sample === "upload" && !photo ? "" : src}
+              studies={studies}
+              consultations={consultations}
+              onRefresh={refresh}
+              onOpenStudy={openStudy}
+              onNewConsultation={newConsultation}
+            />
+          </TabsContent>
+        )}
+        {!embedded && (
+          <TabsContent value="connect">
+            <Connect
+              studies={studies}
+              consultations={consultations}
+              onRefresh={refresh}
+              onOpenStudy={openStudy}
+            />
+          </TabsContent>
+        )}
         <footer>
           <span className="footer-brand">
             AIP <span>/</span> Aesthetics Intelligence Platform
@@ -965,7 +1000,9 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                   <strong>{selected.name}</strong>
                   <p>
                     {settings.intensity}% exploration intensity · illustrative
-                    appearance
+                    {settings.viewer === "3d"
+                      ? "3D reference scan"
+                      : "appearance"}
                   </p>
                 </div>
               </div>
@@ -1015,16 +1052,24 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
               )}
               {studies.map((s) => (
                 <div className="saved-study" key={s.id}>
-                  <img
-                    src={
-                      s.hasPhoto
-                        ? `/api/studies/${s.id}/photo`
-                        : `/images/${s.settings.sample === "man" ? "man" : "woman"}-portrait.png`
-                    }
-                    alt={
-                      s.hasPhoto ? "Saved private portrait" : "Sample portrait"
-                    }
-                  />
+                  {s.settings.viewer === "3d" ? (
+                    <span className="saved-spatial-icon">
+                      <Rotate3D size={30} aria-label="3D reference study" />
+                    </span>
+                  ) : (
+                    <img
+                      src={
+                        s.hasPhoto
+                          ? `/api/studies/${s.id}/photo`
+                          : `/images/${s.settings.sample === "man" ? "man" : "woman"}-portrait.png`
+                      }
+                      alt={
+                        s.hasPhoto
+                          ? "Saved private portrait"
+                          : "Sample portrait"
+                      }
+                    />
+                  )}
                   <div>
                     <h3>{s.title}</h3>
                     <p>
@@ -1035,11 +1080,13 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                       · {new Date(s.createdAt).toLocaleDateString()}
                     </p>
                     <span className="micro-copy">
-                      {s.hasPhoto
-                        ? "Private photo included"
-                        : s.settings.sample === "upload"
-                          ? "Settings only · re-upload required"
-                          : "Fictional sample portrait"}
+                      {s.settings.viewer === "3d"
+                        ? "3D reference scan · separate from your photo"
+                        : s.hasPhoto
+                          ? "Private photo included"
+                          : s.settings.sample === "upload"
+                            ? "Settings only · re-upload required"
+                            : "Fictional sample portrait"}
                     </span>
                     <details className="delete-disclosure">
                       <summary>Delete study</summary>

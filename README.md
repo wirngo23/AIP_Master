@@ -5,6 +5,8 @@ A working first release of AIP Discover, AIP Clinical Studio, and AIP Connect. A
 ## What works
 
 - Cinematic, responsive dark studio with two original, AI-generated fictional adult sample portraits.
+- Rotatable 360° licensed reference head across Discover, Clinical Studio, and Connect, with drag/zoom, view presets, and labelled export. This is a separate reference person, not a reconstruction of the sample portraits or uploaded user.
+- Clinical-only schematic explorer for 25 muscle groups, manual activity/reduction animation, and product/amount demonstration records. Amounts do not drive response predictions. Hair silhouettes are optional and off by default.
 - Twenty optional appearance directions: ten in each of the feminine and masculine collections. Every direction is available to everyone.
 - Local JPG/PNG/WebP upload, browser image normalization, manual framing, WebGL image deformation, before/after comparison, conceptual progression, and labelled JPEG export.
 - Account-scoped saved studies in D1. Uploaded photos are kept in browser memory unless the user separately opts into R2 storage.
@@ -75,7 +77,7 @@ The integration test is restricted to localhost. It simulates trusted dispatcher
 
 **Do not expose the Worker directly as a public origin.** Authorization trusts identity headers supplied by the Sites dispatcher. Another hosting provider requires an authenticated gateway that strips incoming identity headers and supplies verified identity, or a replacement server-side authentication integration.
 
-See [architecture](docs/ARCHITECTURE.md), [release validation](docs/VALIDATION.md), and [next milestones](docs/NEXT_MILESTONES.md).
+See [architecture](docs/ARCHITECTURE.md), [release validation](docs/VALIDATION.md), [3D release scope](docs/SPATIAL_RELEASE.md), [asset attribution](docs/ASSET_ATTRIBUTION.md), and [next milestones](docs/NEXT_MILESTONES.md).
 
 ## Source and hosting
 
