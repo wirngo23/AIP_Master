@@ -9,15 +9,20 @@ import {
 import { type Settings } from "@/lib/aip/domain";
 import { createWarp, type FaceGeometry } from "@/lib/aip/appearance";
 import { analyzeFace } from "@/lib/aip/face-analysis";
+import { analyzeHair } from "@/lib/aip/hair-analysis";
+import { HAIR_COLORS } from "@/lib/aip/hair";
 export type PortraitHandle = { exportImage: () => Promise<Blob | null> };
 const vertex = `attribute vec2 p; varying vec2 uv; void main(){uv=(p+1.)*.5;gl_Position=vec4(p,0,1);}`;
 const fragment = `precision highp float;
 varying vec2 uv; uniform sampler2D photo; uniform vec4 regions[8]; uniform vec2 moves[8]; uniform vec4 lips; uniform float lipScale; uniform float split; uniform vec2 crop; uniform vec3 alignment;
+uniform sampler2D hairMask; uniform vec3 hairTint; uniform float hairMix;
 float g(vec2 p,vec2 c,vec2 s){vec2 d=(p-c)/s;return exp(-dot(d,d)*2.);}
 void main(){vec2 source=(uv-.5)/alignment.x+.5-vec2(alignment.y,alignment.z);source=(source-.5)*crop+.5;vec2 q=source;
 if(uv.x>=split){for(int i=0;i<8;i++){q-=moves[i]*g(source,regions[i].xy,regions[i].zw);}
 vec2 d=source-lips.xy;q-=d*vec2(.16,1.)*lipScale*g(source,lips.xy,lips.zw);
-}gl_FragColor=texture2D(photo,clamp(q,vec2(.001),vec2(.999)));}`;
+}vec3 color=texture2D(photo,clamp(q,vec2(.001),vec2(.999))).rgb;
+if(uv.x>=split && hairMix>0.){float mask=smoothstep(.65,.95,texture2D(hairMask,q).r);float light=dot(color,vec3(.299,.587,.114));vec3 tint=hairTint*(.5+light*1.8)+vec3(pow(light,4.)*.15);color=mix(color,clamp(tint,0.,1.),mask*hairMix);}
+gl_FragColor=vec4(color,1.);}`;
 export const Portrait = forwardRef<
   PortraitHandle,
   {
@@ -34,12 +39,16 @@ export const Portrait = forwardRef<
     p: WebGLProgram;
     crop: number[];
     face: FaceGeometry;
+    image: HTMLImageElement;
+    maskTexture: WebGLTexture;
+    maskReady: boolean;
   } | null>(null);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [generation, setGeneration] = useState(0);
   const [face, setFace] = useState<FaceGeometry | null>(null);
   const [crop, setCrop] = useState([1, 1]);
+  const [hairStatus, setHairStatus] = useState("");
   useImperativeHandle(
     ref,
     () => ({
@@ -74,6 +83,7 @@ export const Portrait = forwardRef<
     let alive = true;
     setLoaded(false);
     setFace(null);
+    setHairStatus("");
     setError("");
     onStatus?.(false);
     const c = canvas.current;
@@ -100,6 +110,7 @@ export const Portrait = forwardRef<
     };
     let p: WebGLProgram | null = null;
     let texture: WebGLTexture | null = null;
+    let maskTexture: WebGLTexture | null = null;
     let buffer: WebGLBuffer | null = null;
     const shaders: WebGLShader[] = [];
     try {
@@ -127,18 +138,39 @@ export const Portrait = forwardRef<
       gl.enableVertexAttribArray(loc);
       gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
       texture = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      maskTexture = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, maskTexture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.LUMINANCE,
+        1,
+        1,
+        0,
+        gl.LUMINANCE,
+        gl.UNSIGNED_BYTE,
+        new Uint8Array([0]),
+      );
+      gl.activeTexture(gl.TEXTURE0);
       const img = new Image();
       img.onload = async () => {
         if (!alive || !p) return;
         try {
           const detected = await analyzeFace(img);
           if (!alive || !p) return;
+          gl.activeTexture(gl.TEXTURE0);
           gl.bindTexture(gl.TEXTURE_2D, texture);
           gl.texImage2D(
             gl.TEXTURE_2D,
@@ -156,6 +188,9 @@ export const Portrait = forwardRef<
             p,
             crop: imageCrop,
             face: detected,
+            image: img,
+            maskTexture: maskTexture!,
+            maskReady: false,
           };
           setFace(detected);
           setCrop(imageCrop);
@@ -194,16 +229,79 @@ export const Portrait = forwardRef<
       renderer.current = null;
       c.removeEventListener("webglcontextlost", lost);
       if (texture) gl.deleteTexture(texture);
+      if (maskTexture) gl.deleteTexture(maskTexture);
       if (buffer) gl.deleteBuffer(buffer);
       if (p) gl.deleteProgram(p);
       shaders.forEach((s) => gl.deleteShader(s));
     };
   }, [src, onStatus]);
   useEffect(() => {
+    let alive = true;
+    const r = renderer.current;
+    if (!r || !loaded) return;
+    if (
+      settings.previewOriginal ||
+      !settings.hairColor ||
+      settings.hairColor === "original"
+    ) {
+      setHairStatus("");
+      return;
+    }
+    if (r.maskReady) {
+      setHairStatus("");
+      return;
+    }
+    setHairStatus("Detecting hair on this device…");
+    void analyzeHair(r.image)
+      .then((mask) => {
+        if (!alive || renderer.current !== r) return;
+        const gl = r.gl;
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, r.maskTexture);
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,
+          gl.LUMINANCE,
+          mask.width,
+          mask.height,
+          0,
+          gl.LUMINANCE,
+          gl.UNSIGNED_BYTE,
+          mask.bytes,
+        );
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.activeTexture(gl.TEXTURE0);
+        r.maskReady = true;
+        setHairStatus("");
+        setGeneration((n) => n + 1);
+      })
+      .catch(() => {
+        if (alive)
+          setHairStatus(
+            "Hair preview unavailable for this photo. The original hair is preserved.",
+          );
+      });
+    return () => {
+      alive = false;
+    };
+  }, [src, loaded, settings.hairColor, settings.previewOriginal]);
+  useEffect(() => {
     const r = renderer.current;
     if (!r || !loaded) return;
     const { gl, p, crop, face } = r;
     gl.useProgram(p);
+    gl.uniform1i(gl.getUniformLocation(p, "photo"), 0);
+    gl.uniform1i(gl.getUniformLocation(p, "hairMask"), 1);
+    const color = settings.hairColor ?? "original";
+    gl.uniform3fv(gl.getUniformLocation(p, "hairTint"), HAIR_COLORS[color]);
+    gl.uniform1f(
+      gl.getUniformLocation(p, "hairMix"),
+      r.maskReady && !settings.previewOriginal && color !== "original"
+        ? 0.9
+        : 0,
+    );
     gl.viewport(0, 0, 750, 1000);
     const warp = createWarp(settings, face);
     gl.uniform4fv(gl.getUniformLocation(p, "regions[0]"), warp.regions);
@@ -237,6 +335,11 @@ export const Portrait = forwardRef<
       />
       <div className="portrait-vignette" />
       <div className="scan-corners" />
+      {hairStatus && (
+        <div className="analysis-status" role="status">
+          {hairStatus}
+        </div>
+      )}
       {overlay && face && (
         <svg className="face-map" viewBox="0 0 300 400" aria-hidden="true">
           {[...face.cheeks, ...face.jaw, ...face.brows, face.lips].map(

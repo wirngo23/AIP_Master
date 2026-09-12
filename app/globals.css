@@ -2662,6 +2662,98 @@ html[data-accent="rose"] .primary-button {
   z-index: 6;
   text-align: center;
 }
+.editing-modes {
+  padding: 14px 18px;
+  border-bottom: 1px solid #2b423a;
+}
+.editing-mode-tabs {
+  display: flex;
+  width: 100%;
+  background: #0f1d1a;
+  border: 1px solid #304c40;
+  border-radius: 12px;
+  height: auto;
+  padding: 4px;
+}
+.editing-mode-tabs > button {
+  flex: 1;
+  padding: 12px 10px;
+  font-size: 14px;
+}
+.original-mode {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.original-mode button {
+  flex: 1;
+  border: 1px solid #314a40;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 13px;
+  color: #b7c9c0;
+}
+.original-mode button.active {
+  background: #2a5140;
+  color: #effff3;
+}
+.focused-controls {
+  padding: 18px 0 4px;
+  display: grid;
+  gap: 16px;
+}
+.focused-controls label {
+  display: block;
+  font-size: 14px;
+  color: #d0e5d7;
+}
+.focused-controls label > span {
+  float: right;
+  color: #a5c4b2;
+}
+.focused-controls label > [data-slot="slider"] {
+  margin-top: 10px;
+}
+.focused-controls p {
+  font-size: 13px;
+  color: #a5bab0;
+  line-height: 1.6;
+  margin: 0;
+}
+.workspace-explorer {
+  min-width: 0;
+  width: 100%;
+}
+.workspace-portrait {
+  max-height: none;
+  width: min(100%, 495px);
+  margin-inline: auto;
+  aspect-ratio: 3 / 4;
+}
+.compact-explorer .workspace-portrait {
+  max-height: none;
+}
+.portal-switch {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 18px;
+}
+.portal-switch button {
+  padding: 8px 12px;
+  border: 1px solid #3c5449;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.portal-switch button[aria-pressed="true"] {
+  background: #2a5140;
+  color: #effff3;
+}
+.portal-switch span {
+  color: #b4d2be;
+  font-size: 13px;
+}
 .preview-modes {
   display: flex;
   gap: 8px;

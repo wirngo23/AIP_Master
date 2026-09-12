@@ -42,6 +42,7 @@ type Props = {
   settings?: Settings;
   clinical?: MuscleView;
   compact?: boolean;
+  managed?: boolean;
   hair?: HairStyle;
   onHairChange?: (hair: HairStyle) => void;
 };
@@ -49,6 +50,7 @@ export default function HeadViewer({
   settings = DEFAULT_SETTINGS,
   clinical,
   compact = false,
+  managed = false,
   hair = "default",
   onHairChange,
 }: Props) {
@@ -61,7 +63,12 @@ export default function HeadViewer({
   const [hairOpen, setHairOpen] = useState(false);
   const [localHair, setLocalHair] = useState<HairStyle>("default");
   const [original, setOriginal] = useState(false);
-  const hairValue = onHairChange ? hair : localHair;
+  const hairValue =
+    settings.previewOriginal || original
+      ? "default"
+      : onHairChange
+        ? hair
+        : localHair;
   const live = useRef({
     settings,
     clinical,
@@ -364,9 +371,10 @@ export default function HeadViewer({
           if (hash !== lastSettings) {
             const p = mesh.geometry.getAttribute("position");
             const s = state.settings;
-            const strength = state.original
-              ? 0
-              : (s.intensity / 100) * progression(s.phase);
+            const strength =
+              state.original || s.previewOriginal
+                ? 0
+                : (s.intensity / 100) * progression(s.phase);
             for (let i = 0; i < p.count; i++) {
               const j = i * 3;
               const v = deformPoint(
@@ -579,7 +587,7 @@ export default function HeadViewer({
           </button>
         </div>
       </div>
-      {!compact && (
+      {!compact && !managed && (
         <div className="spatial-appearance">
           <label>
             <Switch checked={original} onCheckedChange={setOriginal} /> Original
@@ -596,7 +604,7 @@ export default function HeadViewer({
           </button>
         </div>
       )}
-      {hairOpen && !compact && (
+      {hairOpen && !compact && !managed && (
         <div className="hair-options">
           <Select
             value={hairValue}

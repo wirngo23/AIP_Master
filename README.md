@@ -4,6 +4,8 @@ A working first release of AIP Discover, AIP Clinical Studio, and AIP Connect. A
 
 ## What works
 
+- Full face, Lips, and Hair editing modes in Discover, Clinical Studio, Connect and the embed. New sessions start with the original photo; a shared Original/Simulated toggle preserves edits. Photo hair color uses local segmentation; 3D hair styles remain illustrative silhouettes. Both sample portals and uploaded portraits use the same editing controls.
+
 - Cinematic, responsive dark studio with two original, AI-generated fictional adult sample portraits.
 - Rotatable 360° licensed reference head across Discover, Clinical Studio, and Connect, with drag/zoom, view presets, and labelled export. This is a separate reference person, not a reconstruction of the sample portraits or uploaded user.
 - Clinical-only schematic explorer for 25 muscle groups, manual activity/reduction animation, and product/amount demonstration records. Amounts do not drive response predictions. Hair silhouettes are optional and off by default.

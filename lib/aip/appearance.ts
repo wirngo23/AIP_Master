@@ -81,7 +81,9 @@ export function geometryFromLandmarks(
 // Artistic displacement, measured relative to the detected face. No dose or clinical outcome model.
 export function createWarp(s: Settings, face: FaceGeometry) {
   const [cheek, jaw, lip, brow] = appearanceAmounts(s);
-  const strength = (s.intensity / 100) * progression(s.phase);
+  const strength = s.previewOriginal
+    ? 0
+    : (s.intensity / 100) * progression(s.phase);
   const regions: number[] = [],
     moves: number[] = [];
   for (const [pair, value, radiusX, radiusY, vertical] of [

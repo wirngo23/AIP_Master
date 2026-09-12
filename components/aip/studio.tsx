@@ -43,6 +43,8 @@ import { toast } from "sonner";
 import {
   ARCHETYPES,
   applyArchetype,
+  editSettings,
+  selectSample,
   DEFAULT_SETTINGS,
   settingsSchema,
   type Settings,
@@ -54,15 +56,22 @@ import { api, download, normalizePhoto } from "@/lib/aip/client";
 import { Portrait, type PortraitHandle } from "./portrait";
 import { Clinical, Connect } from "./clinic";
 import HeadViewer from "./head-viewer";
+import EditingModes from "./editing-modes";
 
 type Modal = "upload" | "save" | "library" | "consultation" | "privacy" | null;
 export default function Studio({ embedded = false }: { embedded?: boolean }) {
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<Settings>({
+    ...DEFAULT_SETTINGS,
+    viewer: "photo",
+    editMode: "full",
+    previewOriginal: true,
+  });
   const current = useRef(settings);
   current.current = settings;
   const [family, setFamily] = useState<Family>("feminine");
   const [view, setView] = useState("discover");
-  const [split, setSplit] = useState(50);
+  const [split, setSplit] = useState(100);
+  useEffect(()=>{setSplit(current=>settings.previewOriginal?100:current===100?0:current);},[settings.previewOriginal,settings.sample]);
   const [overlay, setOverlay] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [modal, setModal] = useState<Modal>(null);
@@ -97,11 +106,25 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
       ? photo
       : `/images/${settings.sample === "man" ? "man" : "woman"}-portrait.png`;
   const update = (patch: Partial<Settings>) => {
-    setSettings((s) => ({
-      ...s,
-      ...patch,
-      ...(patch.sample ? { viewer: "photo" as const } : {}),
-    }));
+    setSettings((s) => editSettings(s, patch));
+    if (patch.previewOriginal === true) setSplit(100);
+    else if (
+      patch.previewOriginal === false ||
+      (split === 100 &&
+        [
+          "cheek",
+          "jaw",
+          "lip",
+          "brow",
+          "intensity",
+          "phase",
+          "hair",
+          "hairColor",
+        ].some((k) => k in patch))
+    )
+      setSplit(0);
+    if (patch.archetype)
+      setFamily(ARCHETYPES.find((a) => a.id === patch.archetype)!.family);
     setActiveStudy(null);
   };
   const refresh = useCallback(async () => {
@@ -203,6 +226,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
           });
           flushSync(() => {
             setSettings(next);
+            setSplit(next.previewOriginal?100:0);
             setFamily(a.family);
             setView("discover");
             setActiveStudy(null);
@@ -310,6 +334,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
   function openStudy(s: SavedStudy) {
     restoreAlignment.current = null;
     setSettings(s.settings);
+    setSplit(s.settings.previewOriginal?100:0);
     setFamily(ARCHETYPES.find((a) => a.id === s.settings.archetype)!.family);
     setActiveStudy(s.id);
     setTitle(s.title);
@@ -489,12 +514,10 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
             <aside className="direction-panel panel">
               <div className="panel-heading">
                 <span className="section-index">01</span>
-                <h2>Choose your direction</h2>
+                <h2>Choose your archetype</h2>
                 <Sparkles size={16} />
               </div>
-              <p className="muted">
-                Choose your archetype. Refine the look on your terms.
-              </p>
+              <p className="muted">Refine the look on your terms.</p>
               <Tabs
                 value={family}
                 onValueChange={(v) => choose(v === "masculine" ? "M01" : "F01")}
@@ -571,12 +594,14 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                   <TabsTrigger value="photo">Photo study</TabsTrigger>
                 </TabsList>
               </Tabs>
+              <EditingModes settings={settings} onChange={update} />
               <div
                 className={`portrait-stage ${settings.viewer === "3d" ? "spatial-stage" : ""}`}
                 ref={stage}
               >
                 {settings.viewer === "3d" ? (
                   <HeadViewer
+                    managed
                     settings={settings}
                     hair={settings.hair ?? "default"}
                     onHairChange={(hair) => update({ hair })}
@@ -612,19 +637,22 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                   <div className="preview-modes">
                     <button
                       className={split === 100 ? "active" : ""}
-                      onClick={() => setSplit(100)}
+                      onClick={() => update({ previewOriginal: true })}
                     >
                       Original
                     </button>
                     <button
                       className={split === 50 ? "active" : ""}
-                      onClick={() => setSplit(50)}
+                      onClick={() => {
+                        update({ previewOriginal: false });
+                        setSplit(50);
+                      }}
                     >
                       Compare
                     </button>
                     <button
                       className={split === 0 ? "active" : ""}
-                      onClick={() => setSplit(0)}
+                      onClick={() => update({ previewOriginal: false })}
                     >
                       Full preview
                     </button>
@@ -633,7 +661,10 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                     min={0}
                     max={100}
                     value={[split]}
-                    onValueChange={(v) => setSplit(v[0])}
+                    onValueChange={(v) => {
+                      update({ previewOriginal: v[0]===100 });
+                      setSplit(v[0]);
+                    }}
                     aria-label="Before and after comparison position"
                   />
                   <div className="range-endpoints">
@@ -708,27 +739,34 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                       : `${settings.intensity}% editing intensity · changes follow detected features in Photo study.`}
                   </small>
                 </div>
-                {(
-                  [
-                    ["cheek", "Cheek contour", "Soft definition"],
-                    ["jaw", "Jawline", "Contour emphasis"],
-                    ["lip", "Lip fullness", "Subtle emphasis"],
-                    ["brow", "Brow expression", "Open & relaxed"],
-                  ] as const
-                ).map(([key, label, sub]) => (
-                  <div className="feature-control" key={key}>
-                    <div className="range-label">
-                      <label>{label}</label>
-                      <span>{settings[key]}%</span>
+                {(settings.editMode ?? "full") === "full" &&
+                  (
+                    [
+                      ["cheek", "Cheek contour", "Soft definition"],
+                      ["jaw", "Jawline", "Contour emphasis"],
+                      ["lip", "Lip fullness", "Subtle emphasis"],
+                      ["brow", "Brow expression", "Open & relaxed"],
+                    ] as const
+                  ).map(([key, label, sub]) => (
+                    <div className="feature-control" key={key}>
+                      <div className="range-label">
+                        <label>{label}</label>
+                        <span>{settings[key]}%</span>
+                      </div>
+                      <Slider
+                        value={[settings[key]]}
+                        onValueChange={(v) => update({ [key]: v[0] })}
+                        aria-label={label}
+                      />
+                      <small>
+                        {key === "brow"
+                          ? selected.motion.brow < 0
+                            ? "Gentle brow lowering"
+                            : "Brow elevation"
+                          : sub}
+                      </small>
                     </div>
-                    <Slider
-                      value={[settings[key]]}
-                      onValueChange={(v) => update({ [key]: v[0] })}
-                      aria-label={label}
-                    />
-                    <small>{key==="brow"?(selected.motion.brow<0?"Gentle brow lowering":"Brow elevation"):sub}</small>
-                  </div>
-                ))}
+                  ))}
                 <div className="evidence-note">
                   <ShieldCheck size={17} />
                   <p>
@@ -763,14 +801,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                 className={settings.sample === "woman" ? "active" : ""}
                 onClick={() => {
                   update(
-                    applyArchetype(
-                      {
-                        ...settings,
-                        sample: "woman",
-                        alignment: { zoom: 1, x: 0, y: 0 },
-                      },
-                      "F01",
-                    ),
+                    selectSample(settings,"woman"),
                   );
                   setFamily("feminine");
                 }}
@@ -782,14 +813,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                 className={settings.sample === "man" ? "active" : ""}
                 onClick={() => {
                   update(
-                    applyArchetype(
-                      {
-                        ...settings,
-                        sample: "man",
-                        alignment: { zoom: 1, x: 0, y: 0 },
-                      },
-                      "M01",
-                    ),
+                    selectSample(settings,"man"),
                   );
                   setFamily("masculine");
                 }}
@@ -915,6 +939,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
           <TabsContent value="clinical">
             <Clinical
               settings={settings}
+              onChange={update}
               src={settings.sample === "upload" && !photo ? "" : src}
               studies={studies}
               consultations={consultations}
@@ -927,6 +952,9 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
         {!embedded && (
           <TabsContent value="connect">
             <Connect
+              settings={settings}
+              src={settings.sample === "upload" && !photo ? "" : src}
+              onChange={update}
               studies={studies}
               consultations={consultations}
               onRefresh={refresh}

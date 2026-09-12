@@ -173,6 +173,11 @@ export const settingsSchema = z
     sample: z.enum(["woman", "man", "upload"]),
     viewer: z.enum(["photo", "3d"]).optional(),
     hair: z.enum(["default", "crop", "swept", "bob"]).optional(),
+    editMode: z.enum(["full", "lips", "hair"]).optional(),
+    previewOriginal: z.boolean().optional(),
+    hairColor: z
+      .enum(["original", "espresso", "chestnut", "copper", "blonde"])
+      .optional(),
     alignment: z.object({
       zoom: z.number().min(1).max(2),
       x: z.number().min(-0.3).max(0.3),
@@ -193,6 +198,26 @@ export const consultationSchema = z.object({
   followup: z.boolean(),
 });
 export type Settings = z.infer<typeof settingsSchema>;
+export function editSettings(s: Settings, patch: Partial<Settings>): Settings {
+  const edits = [
+    "cheek",
+    "jaw",
+    "lip",
+    "brow",
+    "intensity",
+    "phase",
+    "hair",
+    "hairColor",
+  ];
+  return {
+    ...s,
+    ...patch,
+    ...(edits.some((k) => k in patch) && !("previewOriginal" in patch)
+      ? { previewOriginal: false }
+      : {}),
+    ...(patch.sample ? { viewer: "photo" as const } : {}),
+  };
+}
 export function applyArchetype(s: Settings, id: string): Settings {
   const a = ARCHETYPES.find((a) => a.id === id);
   if (!a) throw Error("Unknown archetype");
@@ -205,6 +230,7 @@ export function applyArchetype(s: Settings, id: string): Settings {
   return {
     ...s,
     archetype: id,
+    previewOriginal: false,
     sample,
     viewer: s.sample === "upload" ? s.viewer : "photo",
     alignment: sample === s.sample ? s.alignment : { zoom: 1, x: 0, y: 0 },
@@ -213,6 +239,9 @@ export function applyArchetype(s: Settings, id: string): Settings {
     lip: a.values[2],
     brow: a.values[3],
   };
+}
+export function selectSample(s:Settings,sample:"man"|"woman"):Settings {
+  return {...applyArchetype({...s,sample},sample==="man"?"M01":"F01"),alignment:s.sample===sample?s.alignment:{zoom:1,x:0,y:0},previewOriginal:true};
 }
 export const DEFAULT_SETTINGS: Settings = {
   archetype: "F01",

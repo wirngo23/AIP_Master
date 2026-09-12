@@ -12,8 +12,16 @@ import {
 } from "@/components/ui/select";
 import { MUSCLES } from "@/lib/aip/spatial";
 import { type Settings } from "@/lib/aip/domain";
-import HeadViewer from "./head-viewer";
-export default function ClinicalSpatial({ settings }: { settings: Settings }) {
+import WorkspaceExplorer from "./workspace-explorer";
+export default function ClinicalSpatial({
+  settings,
+  src,
+  onChange,
+}: {
+  settings: Settings;
+  src: string;
+  onChange: (s: Partial<Settings>) => void;
+}) {
   const [visible, setVisible] = useState(false);
   const [selected, setSelected] = useState("frontalis");
   const [showAll, setShowAll] = useState(true);
@@ -24,8 +32,10 @@ export default function ClinicalSpatial({ settings }: { settings: Settings }) {
   return (
     <section className="clinical-spatial">
       <div className="panel clinical-3d-panel">
-        <HeadViewer
+        <WorkspaceExplorer
           settings={settings}
+          src={src}
+          onChange={patch=>{if(patch.viewer==="photo"||patch.sample){setVisible(false);setPlaying(false);}onChange(patch);}}
           clinical={{
             visible,
             selected,
@@ -55,6 +65,7 @@ export default function ClinicalSpatial({ settings }: { settings: Settings }) {
             checked={visible}
             onCheckedChange={(v) => {
               setVisible(v);
+              if (v) onChange({ viewer: "3d" });
               if (!v) setPlaying(false);
             }}
           />

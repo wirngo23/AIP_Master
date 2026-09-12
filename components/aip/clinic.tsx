@@ -51,10 +51,11 @@ import {
 import { api, download } from "@/lib/aip/client";
 import ClinicalSpatial from "./clinical-spatial";
 import DosageDetails from "./dosage-details";
-import HeadViewer from "./head-viewer";
+import WorkspaceExplorer from "./workspace-explorer";
 
 export function Clinical({
   settings,
+  onChange,
   src,
   studies,
   consultations,
@@ -63,6 +64,7 @@ export function Clinical({
   onNewConsultation,
 }: {
   settings: Settings;
+  onChange: (s: Partial<Settings>) => void;
   src: string;
   studies: SavedStudy[];
   consultations: Consultation[];
@@ -97,7 +99,7 @@ export function Clinical({
           validated clinical system.
         </span>
       </div>
-      <ClinicalSpatial settings={settings} />
+      <ClinicalSpatial settings={settings} src={src} onChange={onChange} />
       <DosageDetails />
       <div className="clinical-grid">
         <aside className="panel clinical-checklist">
@@ -467,11 +469,17 @@ export function LeadTable({
 }
 
 export function Connect({
+  settings,
+  src,
+  onChange,
   consultations,
   studies,
   onRefresh,
   onOpenStudy,
 }: {
+  settings: Settings;
+  src: string;
+  onChange: (s: Partial<Settings>) => void;
   consultations: Consultation[];
   studies: SavedStudy[];
   onRefresh: () => Promise<void>;
@@ -601,7 +609,12 @@ export function Connect({
               Explore an appearance direction and prepare for a personal
               consultation.
             </p>
-            <HeadViewer compact />
+            <WorkspaceExplorer
+              settings={settings}
+              src={src}
+              onChange={onChange}
+              compact
+            />
             <button
               className="primary-button"
               onClick={() => setPreview((v) => !v)}

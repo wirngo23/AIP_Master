@@ -1,5 +1,12 @@
 # Validation record — foundation release
 
+## Shared Full face / Lips / Hair update — September 12, 2026
+
+- All 26 tests and TypeScript checks passed. Added coverage for preserved edits across modes, original-view geometry, sample framing reset and hair mask orientation.
+- Native CPU hair segmentation detected confident hair on both fictional sample portraits; model metadata confirms the hair category used by the renderer.
+- Source review caught and corrected comparison/original-state disagreement and inherited framing when switching samples.
+- [Editing modes](EDITOR_MODES.md) documents the shared workspace behavior, original defaults and photo-versus-3D hair capabilities. Browser GPU/visual QA remains unperformed.
+
 ## Archetype consistency update — September 12, 2026
 
 - Collection selection previously changed only the displayed option list. It now selects a matching sample portrait and preset together. Uploaded portraits are preserved, direct sample controls synchronize the collection, and Reset keeps the selected collection.
