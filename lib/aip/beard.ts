@@ -4,7 +4,7 @@ export type BeardStyle=NonNullable<Settings['beard']>;
 const smooth=(a:number,b:number,x:number)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
 function inside(p:XY,outline:XY[]){let yes=false;for(let i=0,j=outline.length-1;i<outline.length;j=i++){const a=outline[i],b=outline[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)yes=!yes;}return yes;}
 export function beardProfile(style:BeardStyle){
- return ({original:{length:0,base:0,strands:0},stubble:{length:.006,base:.08,strands:.13},boxed:{length:.021,base:.40,strands:.30},goatee:{length:.025,base:.36,strands:.30},mustache:{length:.025,base:.34,strands:.34},chinstrap:{length:.015,base:.26,strands:.27}})[style];
+ return ({original:{length:0,base:0,strands:0},stubble:{length:.006,base:.08,strands:.13},boxed:{length:.021,base:.15,strands:.40},goatee:{length:.025,base:.14,strands:.40},mustache:{length:.025,base:.12,strands:.42},chinstrap:{length:.015,base:.10,strands:.36}})[style];
 }
 export function beardCoverage(face:FaceGeometry,style:BeardStyle,x:number,y:number){
  if(style==='original')return 0;

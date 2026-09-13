@@ -36,3 +36,6 @@ export const clinics = sqliteTable("clinics", {
   owner: text("owner").primaryKey(),
   config: text("config").notNull(),
 });
+export const photoRenderRequests=sqliteTable('photo_render_requests',{
+ id:text('id').primaryKey(),owner:text('owner').notNull(),day:text('day').notNull(),
+},t=>[index('photo_render_owner_day').on(t.owner,t.day)]);

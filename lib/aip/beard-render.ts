@@ -13,7 +13,7 @@ export function renderBeard(face:FaceGeometry,settings:Settings,imageWidth:numbe
  const x0=Math.max(0,Math.floor((chin.x-face.width*.52)*w)),x1=Math.min(w,Math.ceil((chin.x+face.width*.52)*w));
  const y0=Math.max(0,Math.floor((1-(face.noseBase?.y??face.lips.y+face.height*.18))*h)),y1=Math.min(h,Math.ceil((1-chin.y+face.height*.02)*h));
  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
-  const coverage=beardCoverage(face,style,x/w,1-y/h),i=(y*w+x)*4;area+=coverage;
+  const variation=.72+.14*Math.sin(x*.029+y*.015)+.12*Math.sin(x*.071-y*.044);const coverage=beardCoverage(face,style,x/w,1-y/h)*variation,i=(y*w+x)*4;area+=coverage;
   mask.data[i+3]=Math.round(coverage*255);
   base.data[i]=rgb[0];base.data[i+1]=rgb[1];base.data[i+2]=rgb[2];base.data[i+3]=Math.round(coverage*profile.base*density*255);
  }

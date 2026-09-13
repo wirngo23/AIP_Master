@@ -1,25 +1,5 @@
-import { z } from "zod";
+import { clinicConfigSchema as schema } from "@/lib/aip/clinic-config";
 import { database, failure, json, owner, readJson } from "@/lib/aip/server";
-const schema = z.object({
-  name: z.string().trim().min(2).max(80),
-  domain: z
-    .string()
-    .max(200)
-    .refine((v) => {
-      try {
-        const u = new URL(v);
-        return (
-          u.protocol === "https:" &&
-          !u.username &&
-          !u.password &&
-          u.pathname === "/"
-        );
-      } catch {
-        return false;
-      }
-    }, "Use a secure website origin."),
-  accent: z.enum(["mint", "blue", "rose"]),
-});
 export async function GET() {
   try {
     const user = await owner();

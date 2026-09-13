@@ -50,6 +50,9 @@ import {
 } from "@/lib/aip/domain";
 import { api, download } from "@/lib/aip/client";
 import ClinicalSpatial from "./clinical-spatial";
+import { ClinicLinks } from './clinic-booking';
+import type { ClinicConfig } from '@/lib/aip/clinic-config';
+import OutcomeComparison from './outcome-comparison';
 import DosageDetails from "./dosage-details";
 import WorkspaceExplorer from "./workspace-explorer";
 import { appearanceIntent, MODE_LABELS } from "@/lib/aip/regions";
@@ -102,6 +105,7 @@ export function Clinical({
       </div>
       <ClinicalSpatial settings={settings} src={src} onChange={onChange} />
       <DosageDetails />
+      <OutcomeComparison src={src} uploaded={settings.sample==='upload'&&!src.startsWith('/images/')}/>
       <div className="clinical-grid">
         <aside className="panel clinical-checklist">
           <p className="eyebrow">CONSULTATION PREPARATION</p>
@@ -486,10 +490,10 @@ export function Connect({
   onRefresh: () => Promise<void>;
   onOpenStudy: (s: SavedStudy) => void;
 }) {
-  const [clinic, setClinic] = useState({
+  const [clinic, setClinic] = useState<ClinicConfig>({
     name: "Your clinic",
     domain: "https://yourclinic.example",
-    accent: "mint",
+    accent: "mint",bookingUrl:"",registryUrl:"",location:"",
   });
   const [busy, setBusy] = useState(false);
   const [origin, setOrigin] = useState("");
@@ -498,7 +502,7 @@ export function Connect({
     setOrigin(window.location.origin);
     api<{ clinic: typeof clinic | null }>("/api/clinic")
       .then((d) => {
-        if (d.clinic) setClinic(d.clinic);
+        if (d.clinic) setClinic({...d.clinic,bookingUrl:d.clinic.bookingUrl??"",registryUrl:d.clinic.registryUrl??"",location:d.clinic.location??""});
       })
       .catch(() => {});
   }, []);
@@ -572,11 +576,15 @@ export function Connect({
             Saved for integration planning. Domain verification is required
             before public activation.
           </p>
+          <label className="form-field">Country / state<input maxLength={120} value={clinic.location} onChange={e=>setClinic({...clinic,location:e.target.value})}/></label>
+          <label className="form-field">Existing booking page<input type="url" maxLength={500} value={clinic.bookingUrl} onChange={e=>setClinic({...clinic,bookingUrl:e.target.value})} placeholder="https://yourclinic.com/book"/></label>
+          <label className="form-field">Professional register link<input type="url" maxLength={500} value={clinic.registryUrl} onChange={e=>setClinic({...clinic,registryUrl:e.target.value})} placeholder="https://official-register.example/practitioner"/></label>
+          <p className="micro-copy">These are clinic-supplied links. Adding a register link does not verify credentials. The booking service handles appointment confirmation.</p>
           <label className="form-field">
             Accent
             <Select
               value={clinic.accent}
-              onValueChange={(accent) => setClinic({ ...clinic, accent })}
+              onValueChange={(accent) => {if(accent==='mint'||accent==='blue'||accent==='rose')setClinic({ ...clinic, accent });}}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -623,6 +631,7 @@ export function Connect({
               {preview ? "Close live embed" : "Test the live embed"}
               <ArrowUpRight size={16} />
             </button>
+            <ClinicLinks clinic={clinic}/>
             <span className="powered-by">
               POWERED BY AIP · ILLUSTRATIVE PREVIEW
             </span>

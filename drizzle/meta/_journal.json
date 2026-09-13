@@ -8,6 +8,13 @@
       "when": 1789247298323,
       "tag": "0000_friendly_blindfold",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789262465144,
+      "tag": "0001_photo_render_requests",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
+import CapturedAngles from './captured-angles';
 import { Rotate3D, Upload, Play, Pause, X } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 export default function RealFaceViews({source}:{source:string}){
@@ -14,7 +15,7 @@ export default function RealFaceViews({source}:{source:string}){
   }
   return <details className="real-face-views">
     <summary><Rotate3D size={17}/> Real face · turn & inspect <span>YOUR RECORDED ANGLES</span></summary>
-    <div className="turn-content"><p>See the real person from multiple angles. Record a slow left-to-right head turn in even light, keeping the camera still. Include only an adult who has agreed to this use.</p>
+    <div className="turn-content"><CapturedAngles source={source}/><h3>Or inspect a recorded turn.</h3><p>See the real person from multiple angles. Record a slow left-to-right head turn in even light, keeping the camera still. Include only an adult who has agreed to this use.</p>
       <p className="turn-evidence">Original video only. Photo edits are not applied to this footage. A single front photo cannot reveal unseen sides.</p>
       {!url?<div className="turn-empty"><Rotate3D size={30}/><h3>Bring your own angles.</h3><p>A 5–15 second turn is ideal. Maximum 60 seconds.</p></div>:<>
         <video ref={video} src={url} muted playsInline preload="metadata" className="turn-video" aria-label="Original recorded face angles, without simulated modifications" onLoadedMetadata={e=>{const d=e.currentTarget.duration;if(!Number.isFinite(d)||d<=0||d>60){setError('Use a video with a duration of 60 seconds or less.');setUrl('');return;}setDuration(d);}} onTimeUpdate={e=>setPosition(e.currentTarget.currentTime)} onPlay={()=>setPlaying(true)} onPause={()=>setPlaying(false)} onEnded={()=>setPlaying(false)} onError={()=>{setError('This browser cannot decode that video. Try an MP4 or WebM recording.');setUrl('');}}/>

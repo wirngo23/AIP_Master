@@ -57,6 +57,7 @@ import { api, download, normalizePhoto } from "@/lib/aip/client";
 import { Portrait, type PortraitHandle } from "./portrait";
 import { Clinical, Connect } from "./clinic";
 import RegionArchetypes from "./region-archetypes";
+import ClinicBooking from './clinic-booking';
 import RealFaceViews from "./real-face-views";
 import {appearanceIntent, MODE_LABELS} from "@/lib/aip/regions";
 import EditingModes from "./editing-modes";
@@ -559,7 +560,7 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
                   />
                 )}
               </div>
-              <RealFaceViews source={src}/>
+              <RealFaceViews source={src}/><ClinicBooking/>
               {(
                 <div className="comparison-control">
                   <div className="preview-modes">
@@ -1214,10 +1215,14 @@ export default function Studio({ embedded = false }: { embedded?: boolean }) {
             <div className="privacy-details">
               <div>
                 <ShieldCheck size={20} />
-                <h3>Explore without uploading to a server.</h3>
+                <h3>Choose how your photo is processed.</h3>
                 <p>
-                  Your chosen photo is used in browser memory. Closing or
-                  reloading discards an unsaved photo.
+                  Instant previews process your photo in browser memory. If
+                  photographic rendering is connected, selecting Render sends
+                  your photo to OpenAI only after explicit permission. That
+                  service processes the image under its own terms. AIP does
+                  not save generated renders. Closing or reloading discards
+                  unsaved photos and local comparisons.
                 </p>
               </div>
               <div>
