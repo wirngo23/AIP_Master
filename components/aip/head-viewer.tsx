@@ -176,13 +176,21 @@ export default function HeadViewer({
           setStatus("error");
         };
         renderer.domElement.addEventListener("webglcontextlost", lost);
-        const resize = new ResizeObserver(() => {
+        let resizeFrame = 0;
+        let previousWidth = 0, previousHeight = 0;
+        const fitCanvas = () => {
           const w = container.clientWidth,
             h = container.clientHeight;
-          if (!w || !h) return;
-          renderer.setSize(w, h);
+          if (!w || !h || (w === previousWidth && h === previousHeight)) return;
+          previousWidth = w; previousHeight = h;
+          // CSS owns layout; update only the backing buffer outside observer delivery.
+          renderer.setSize(w, h, false);
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
+        };
+        const resize = new ResizeObserver(() => {
+          cancelAnimationFrame(resizeFrame);
+          resizeFrame = requestAnimationFrame(fitCanvas);
         });
         resize.observe(container);
         let visible = true;
@@ -194,6 +202,7 @@ export default function HeadViewer({
           disposed = true;
           renderer.setAnimationLoop(null);
           resize.disconnect();
+          cancelAnimationFrame(resizeFrame);
           observer.disconnect();
           controls.dispose();
           renderer.domElement.removeEventListener("webglcontextlost", lost);
@@ -424,11 +433,7 @@ export default function HeadViewer({
         });
         setStatus("ready");
         resize.disconnect();
-        const w = container.clientWidth,
-          h = container.clientHeight;
-        renderer.setSize(w, h);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
+        fitCanvas();
         resize.observe(container);
         draw();
       } catch (e) {
