@@ -33,6 +33,13 @@ test("analysis rejects absent, cropped, tilted and non-finite faces", () => {
   bad[105].x = NaN;
   assert.throws(() => geometryFromLandmarks(bad, 1));
 });
+test("analysis validates every lip, jaw and beard-boundary landmark", () => {
+  for (const id of [0,2,17,93,58,172,136,150,149,176,148,377,400,378,379,365,397,288,323]) {
+    const bad = points.map(p => ({...p}));
+    bad[id].x = NaN;
+    assert.throws(() => geometryFromLandmarks(bad, 1), `invalid landmark ${id}`);
+  }
+});
 test("edits follow facial landmarks and remain identity at zero", () => {
   const face = geometryFromLandmarks(points, 1);
   const zero = createWarp({ ...DEFAULT_SETTINGS, intensity: 0 }, face);

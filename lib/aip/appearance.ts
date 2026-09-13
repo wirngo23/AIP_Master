@@ -11,6 +11,9 @@ export type FaceGeometry = {
   lipWidth: number;
   lipHeight: number;
   chin?: XY;
+  noseBase?: XY;
+  lipTop?: XY;
+  outline?: XY[];
 };
 function motion(s: Settings) {
   return ARCHETYPES.find((a) => a.id === s.archetype)!.motion;
@@ -34,6 +37,7 @@ export function geometryFromLandmarks(
 ): FaceGeometry {
   const ids = [
     234, 454, 205, 425, 132, 361, 105, 334, 10, 152, 13, 14, 61, 291, 1,
+    0, 2, 17, 93, 58, 172, 136, 150, 149, 176, 148, 377, 400, 378, 379, 365, 397, 288, 323,
   ];
   if (
     !Number.isFinite(aspect) ||
@@ -66,7 +70,7 @@ export function geometryFromLandmarks(
     [p(a), p(b)].sort((a, b) => a.x - b.x) as [XY, XY];
   return {
     cheeks: pair(205, 425),
-    jaw: pair(132, 361),
+    jaw: pair(172, 397),
     brows: pair(105, 334),
     corners: pair(61, 291),
     lips: {
@@ -74,10 +78,13 @@ export function geometryFromLandmarks(
       y: 1 - (points[13].y + points[14].y) / 2,
     },
     chin: p(152),
+    noseBase: p(2),
+    lipTop: p(0),
+    outline: [234,93,132,58,172,136,150,149,176,148,152,377,400,378,379,365,397,288,361,323,454].map(p),
     width,
     height,
     lipWidth: Math.abs(points[291].x - points[61].x),
-    lipHeight: Math.max(0.018, Math.abs(points[14].y - points[13].y)),
+    lipHeight: Math.max(0.018, Math.abs(points[17].y - points[0].y)),
   };
 }
 // Artistic displacement, measured relative to the detected face. No dose or clinical outcome model.
@@ -118,7 +125,7 @@ export function createWarp(s: Settings, face: FaceGeometry) {
       face.lips.x,
       face.lips.y,
       face.lipWidth * 0.7,
-      Math.max(face.lipHeight * 1.5, 0.035),
+      Math.max(face.lipHeight * .85, 0.025),
     ],
     lipScale: lip * strength * 0.7,
     // Monotone inverse scaling: even the strongest allowed setting remains < 1.

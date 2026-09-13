@@ -11,34 +11,26 @@ import { createWarp, type FaceGeometry } from "@/lib/aip/appearance";
 import { analyzeFace } from "@/lib/aip/face-analysis";
 import { analyzeHair } from "@/lib/aip/hair-analysis";
 import { HAIR_COLORS } from "@/lib/aip/hair";
+import { renderBeard } from "@/lib/aip/beard-render";
+import { inspectionAlignment } from "@/lib/aip/inspection";
 export type PortraitHandle = { exportImage: () => Promise<Blob | null> };
 const vertex = `attribute vec2 p; varying vec2 uv; void main(){uv=(p+1.)*.5;gl_Position=vec4(p,0,1);}`;
 const fragment = `precision highp float;
 varying vec2 uv; uniform sampler2D photo; uniform vec4 regions[9]; uniform vec2 moves[9]; uniform vec4 lips; uniform float lipScale; uniform vec4 lipShape; uniform float split; uniform vec2 crop; uniform vec3 alignment;
 uniform sampler2D hairMask; uniform vec3 hairTint; uniform float hairMix;
-uniform vec4 faceFrame; uniform float beardStyle; uniform float beardMix; uniform vec3 beardTint;
+uniform sampler2D beardTexture; uniform float beardMix;
 float g(vec2 p,vec2 c,vec2 s){vec2 d=(p-c)/s;return exp(-dot(d,d)*2.);}
-float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 void main(){vec2 source=(uv-.5)/alignment.x+.5-vec2(alignment.y,alignment.z);source=(source-.5)*crop+.5;vec2 q=source;
 if(uv.x>=split){for(int i=0;i<9;i++){q-=moves[i]*g(source,regions[i].xy,regions[i].zw);}
 vec2 d=source-lips.xy;float fullness=mix(lipShape.y,lipShape.x,smoothstep(-.005,.005,d.y));
 q-=d*vec2(.16*lipScale+.3*lipShape.z,fullness)*g(source,lips.xy,lips.zw);
 float cupid=g(source,lips.xy+vec2(-lips.z*.25,lips.w*.32),lips.zw*vec2(.22,.48))+g(source,lips.xy+vec2(lips.z*.25,lips.w*.32),lips.zw*vec2(.22,.48));q.y-=cupid*lipShape.w*lips.w*.17;
 }vec3 color=texture2D(photo,clamp(q,vec2(.001),vec2(.999))).rgb;
-if(uv.x>=split && hairMix>0.){float mask=smoothstep(.65,.95,texture2D(hairMask,q).r);float light=dot(color,vec3(.299,.587,.114));vec3 tint=hairTint*(.5+light*1.8)+vec3(pow(light,4.)*.15);color=mix(color,clamp(tint,0.,1.),mask*hairMix);}
-if(uv.x>=split && beardMix>0.){
-vec2 f=(q-faceFrame.xy)/faceFrame.zw;float edge=abs(f.x);float bottom=.014+.34*pow(edge/.5,2.);float top=.28+.2*edge;
-float base=smoothstep(bottom,bottom+.025,f.y)*(1.-smoothstep(top-.025,top,f.y))*(1.-smoothstep(.40,.46,edge));
-float mouth=1.-smoothstep(.65,1.05,length((q-lips.xy)/(lips.zw*vec2(1.15,1.18))));
-float moustache=g(q,lips.xy+vec2(0.,lips.w*1.05),lips.zw*vec2(.92,.55));moustache=smoothstep(.08,.4,moustache);
-float mask=base*(1.-mouth);
-if(beardStyle>2.5&&beardStyle<3.5)mask*=1.-smoothstep(.17,.23,edge);
-if(beardStyle>3.5&&beardStyle<4.5)mask=moustache*(1.-mouth);
-else if(beardStyle>4.5)mask*=1.-smoothstep(bottom+.045,bottom+.095,f.y);
-else mask=max(mask,moustache*(1.-mouth));
-vec2 grain=q*vec2(1300.,1900.);float strand=hash(floor(grain));float tip=1.-smoothstep(.12,.48,abs(fract(grain.x)-.5));float fibers=smoothstep(.26,.8,strand)*tip;
-float light=dot(color,vec3(.299,.587,.114));vec3 tone=beardTint*(.5+light)+vec3(light*.08);
-color=mix(color,tone,mask*beardMix*(.16+.84*fibers));}
+if(uv.x>=split && hairMix>0.){float mask=smoothstep(.4,.95,texture2D(hairMask,q).r);float light=dot(color,vec3(.299,.587,.114));
+// Retain deep strand shadows and original highlights instead of a flat color coat.
+vec3 tint=hairTint*(.12+pow(light,.72)*1.65)+vec3(pow(light,3.)*.22);color=mix(color,clamp(tint,0.,1.),mask*hairMix);}
+if(uv.x>=split && beardMix>0.){vec4 beard=texture2D(beardTexture,q);float light=dot(color,vec3(.299,.587,.114));color=mix(color,beard.rgb*(.75+light*.5),beard.a*beardMix);}
+
 gl_FragColor=vec4(color,1.);}`;
 export const Portrait = forwardRef<
   PortraitHandle,
@@ -59,13 +51,19 @@ export const Portrait = forwardRef<
     image: HTMLImageElement;
     maskTexture: WebGLTexture;
     maskReady: boolean;
+    beardTexture: WebGLTexture;
+    beardKey: string;
   } | null>(null);
+  const [focused,setFocused]=useState(false);
+  const [holdOriginal,setHoldOriginal]=useState(false);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [generation, setGeneration] = useState(0);
   const [face, setFace] = useState<FaceGeometry | null>(null);
   const [crop, setCrop] = useState([1, 1]);
   const [hairStatus, setHairStatus] = useState("");
+  const viewAlignment=focused&&face?inspectionAlignment(face,crop,settings.editMode):settings.alignment;
+  const shownSplit=holdOriginal?100:split;
   useImperativeHandle(
     ref,
     () => ({
@@ -128,6 +126,7 @@ export const Portrait = forwardRef<
     let p: WebGLProgram | null = null;
     let texture: WebGLTexture | null = null;
     let maskTexture: WebGLTexture | null = null;
+    let beardTexture: WebGLTexture | null = null;
     let buffer: WebGLBuffer | null = null;
     const shaders: WebGLShader[] = [];
     try {
@@ -181,6 +180,8 @@ export const Portrait = forwardRef<
         new Uint8Array([0]),
       );
       gl.activeTexture(gl.TEXTURE0);
+      beardTexture=gl.createTexture();gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,beardTexture);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,0]));gl.activeTexture(gl.TEXTURE0);
       const img = new Image();
       img.onload = async () => {
         if (!alive || !p) return;
@@ -197,6 +198,7 @@ export const Portrait = forwardRef<
             gl.UNSIGNED_BYTE,
             img,
           );
+          c.width=Math.min(1440,Math.max(900,img.width));c.height=Math.round(c.width/0.75);
           const ratio = img.width / img.height;
           const imageCrop =
             ratio > 0.75 ? [0.75 / ratio, 1] : [1, ratio / 0.75];
@@ -208,6 +210,7 @@ export const Portrait = forwardRef<
             image: img,
             maskTexture: maskTexture!,
             maskReady: false,
+            beardTexture:beardTexture!,beardKey:"",
           };
           setFace(detected);
           setCrop(imageCrop);
@@ -247,6 +250,7 @@ export const Portrait = forwardRef<
       c.removeEventListener("webglcontextlost", lost);
       if (texture) gl.deleteTexture(texture);
       if (maskTexture) gl.deleteTexture(maskTexture);
+      if (beardTexture) gl.deleteTexture(beardTexture);
       if (buffer) gl.deleteBuffer(buffer);
       if (p) gl.deleteProgram(p);
       shaders.forEach((s) => gl.deleteShader(s));
@@ -319,28 +323,27 @@ export const Portrait = forwardRef<
         ? (settings.hairStrength ?? 90)/100
         : 0,
     );
-    gl.viewport(0, 0, 750, 1000);
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     const warp = createWarp(settings, face);
     gl.uniform4fv(gl.getUniformLocation(p, "regions[0]"), warp.regions);
     gl.uniform2fv(gl.getUniformLocation(p, "moves[0]"), warp.moves);
     gl.uniform4fv(gl.getUniformLocation(p, "lips"), warp.lip);
     gl.uniform1f(gl.getUniformLocation(p, "lipScale"), warp.lipScale);
     gl.uniform4fv(gl.getUniformLocation(p, "lipShape"), warp.lipShape);
-    const chin=face.chin??{x:face.lips.x,y:face.lips.y-face.height*.22};
-    gl.uniform4f(gl.getUniformLocation(p,"faceFrame"),chin.x,chin.y,face.width,face.height);
-    gl.uniform1f(gl.getUniformLocation(p,"beardStyle"),["original","stubble","boxed","goatee","mustache","chinstrap"].indexOf(settings.beard??"original"));
-    gl.uniform1f(gl.getUniformLocation(p,"beardMix"),!settings.previewOriginal&&settings.beard&&settings.beard!=="original"?(settings.beardDensity??50)/100:0);
-    gl.uniform3fv(gl.getUniformLocation(p,"beardTint"),HAIR_COLORS[settings.beardColor??"espresso"]);
-    gl.uniform1f(gl.getUniformLocation(p, "split"), split / 100);
+    const beardKey=[settings.beard??'original',settings.beardDensity??50,settings.beardColor??'espresso'].join(':');
+    if(r.beardKey!==beardKey){const texture=renderBeard(face,settings,r.image.width,r.image.height);gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,r.beardTexture);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,texture);gl.activeTexture(gl.TEXTURE0);r.beardKey=beardKey;}
+    gl.uniform1i(gl.getUniformLocation(p,'beardTexture'),2);
+    gl.uniform1f(gl.getUniformLocation(p,'beardMix'),settings.previewOriginal?0:1);
+    gl.uniform1f(gl.getUniformLocation(p, "split"), shownSplit / 100);
     gl.uniform2f(gl.getUniformLocation(p, "crop"), crop[0], crop[1]);
     gl.uniform3f(
       gl.getUniformLocation(p, "alignment"),
-      settings.alignment.zoom,
-      settings.alignment.x,
-      settings.alignment.y,
+      viewAlignment.zoom,
+      viewAlignment.x,
+      viewAlignment.y,
     );
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-  }, [settings, split, loaded, generation]);
+  }, [settings, shownSplit, focused, loaded, generation]);
   return (
     <>
       <img
@@ -357,6 +360,7 @@ export const Portrait = forwardRef<
         aria-label="Interactive illustrative appearance preview; not a treatment prediction"
       />
       <div className="portrait-vignette" />
+      {loaded&&!error&&<div className="portrait-inspect-controls"><button aria-pressed={!focused} onClick={()=>setFocused(false)}>Full portrait</button><button aria-pressed={focused} onClick={()=>setFocused(true)}>Region close-up</button><button onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);setHoldOriginal(true);}} onPointerUp={()=>setHoldOriginal(false)} onPointerCancel={()=>setHoldOriginal(false)} onLostPointerCapture={()=>setHoldOriginal(false)} onKeyDown={e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();setHoldOriginal(true);}}} onKeyUp={()=>setHoldOriginal(false)} onBlur={()=>setHoldOriginal(false)}>Hold original</button></div>}
       <div className="scan-corners" />
       {hairStatus && (
         <div className="analysis-status" role="status">
@@ -368,12 +372,12 @@ export const Portrait = forwardRef<
           {[...face.cheeks, ...face.jaw, ...face.brows, face.lips].map(
             (point, i) => {
               const x =
-                ((point.x - 0.5) / crop[0] + settings.alignment.x) *
-                  settings.alignment.zoom +
+                ((point.x - 0.5) / crop[0] + viewAlignment.x) *
+                  viewAlignment.zoom +
                 0.5;
               const y =
-                ((point.y - 0.5) / crop[1] + settings.alignment.y) *
-                  settings.alignment.zoom +
+                ((point.y - 0.5) / crop[1] + viewAlignment.y) *
+                  viewAlignment.zoom +
                 0.5;
               return <circle key={i} cx={x * 300} cy={(1 - y) * 400} r="2" />;
             },
@@ -397,11 +401,11 @@ export const Portrait = forwardRef<
       </div>
       {loaded && (
         <div className="portrait-caption">
-          <span>{split > 0 ? "ORIGINAL" : ""}</span>
-          <span>{split < 100 ? "APPEARANCE PREVIEW" : ""}</span>
+          <span>{shownSplit > 0 ? "ORIGINAL" : ""}</span>
+          <span>{shownSplit < 100 ? "APPEARANCE PREVIEW" : ""}</span>
         </div>
       )}
-      {loaded && split > 0 && split < 100 && (
+      {loaded && shownSplit > 0 && shownSplit < 100 && (
         <div className="comparison-line" style={{ left: `${split}%` }}>
           <span>‹ ›</span>
         </div>

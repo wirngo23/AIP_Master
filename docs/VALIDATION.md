@@ -1,5 +1,14 @@
 # Validation record — foundation release
 
+## Rendering clarity update — September 12, 2026
+
+- Reproduced the reported beard problem in the deployed Clinical Studio: the boxed style used the same faint, regular grain as other styles. Replaced it with cached, deterministic hair strands and distinct coverage for stubble, boxed beard, goatee, mustache and jawline frame. Facial outline and outer lip landmarks constrain the overlay.
+- Corrected lower-jaw anchors and outer-lip thickness measurements. Increased canvas resolution, added regional close-up and temporary original inspection, preserved hair shadows/highlights, and widened Connect's preview below 1050px.
+- With explicit user authorization, browser-tested the local WebGL application in Discover, Clinical Studio and Connect. Exercised all five modes in each portal; checked both fictional samples across the session, distinct beard silhouettes, zero/maximum density, hair color, upper/lower lip emphasis, opposing jaw directions, chin length, original/preview comparison, close-up framing and retained selections between portals. These are representative interaction and visual checks, not an exhaustive preset-by-device matrix.
+- Captured original and boxed-beard screenshots in the local working/render-qa directory. The browser error log contained the model runtime's informational CPU-delegate message; no renderer failure was observed during these checks. Local authenticated records were outside this rendering test.
+- All 36 tests, TypeScript checking and the production build passed. Independent source review identified a missing landmark-validation check; the fix now rejects every newly consumed nonfinite landmark and has a regression test.
+- Rendering remains procedural appearance editing. Hair length/cut, hair removal, personal 360-degree reconstruction, clinically validated dose response and photorealism across arbitrary uploads are not established by this release. Full mobile, assistive-technology, performance and hosted identity testing remain outstanding. The historical entries below describe their earlier validation scope.
+
 ## Shared Full face / Lips / Hair update — September 12, 2026
 
 - All 26 tests and TypeScript checks passed. Added coverage for preserved edits across modes, original-view geometry, sample framing reset and hair mask orientation.
@@ -37,7 +46,7 @@
 
 ## Validation limits
 
-Browser interaction, visual layout, WebGL rendering across devices, mobile/keyboard/screen-reader behavior, and end-to-end hosted identity were not exercised in this turn. These require the hands-on experience-validation milestone. The local development preview was rendered successfully over HTTP.
+The rendering clarity update above adds representative browser and visual checks. Cross-device WebGL, comprehensive mobile/keyboard/screen-reader behavior, and end-to-end hosted identity remain unverified. The local development preview was rendered successfully over HTTP.
 
 The optional WebMCP tools were implemented with schemas, shared validation, state updates, and lifecycle cleanup. No supporting live WebMCP validation context was available, so registration and execution are **not verified**.
 

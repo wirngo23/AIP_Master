@@ -18,7 +18,7 @@ export const REGIONAL_PRESETS:RegionalPreset[]=[
   {id:'hair-silver',mode:'hair',name:'Silver studio',description:'A cool silver color study that keeps the existing haircut.',patch:{hairColor:'silver',hairStrength:90}},
   {id:'beard-original',mode:'beard',name:'Original facial hair',description:'Remove the preview overlay and show the original facial hair. Existing hair is not erased.',patch:{beard:'original',beardDensity:0}},
   {id:'beard-stubble',mode:'beard',name:'Light stubble',description:'A fine, low-density texture along the cheeks, chin and upper lip.',patch:{beard:'stubble',beardDensity:30}},
-  {id:'beard-boxed',mode:'beard',name:'Short boxed',description:'A denser, neatly bounded cheek-and-chin overlay with a connected mustache.',patch:{beard:'boxed',beardDensity:72}},
+  {id:'beard-boxed',mode:'beard',name:'Short boxed',description:'A denser, neatly bounded cheek-and-chin overlay with a tailored mustache.',patch:{beard:'boxed',beardDensity:72}},
   {id:'beard-goatee',mode:'beard',name:'Classic goatee',description:'Concentrate texture around the mouth and chin, leaving the cheeks unchanged.',patch:{beard:'goatee',beardDensity:66}},
   {id:'beard-mustache',mode:'beard',name:'Tailored mustache',description:'Add texture above the upper lip only; keep cheek and chin appearance unchanged.',patch:{beard:'mustache',beardDensity:68}},
   {id:'beard-chinstrap',mode:'beard',name:'Jawline frame',description:'A narrow band of texture follows the lower jaw and chin.',patch:{beard:'chinstrap',beardDensity:58}},
